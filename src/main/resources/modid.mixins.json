@@ -6,7 +6,9 @@
   "client": [
     "MinecraftClientMixin",
     "gui.InGameGUIMixin",
-    "gui.TitleScreenMixin"
+    "gui.TitleScreenMixin",
+    "entity.LivingEntityMixin",
+    "client.KeyboardMixin"
   ],
   "injectors": {
     "defaultRequire": 1
