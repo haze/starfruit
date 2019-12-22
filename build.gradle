@@ -28,6 +28,10 @@ dependencies {
 		transitive = false
     }
 
+	compile("net.engio:mbassador:${project.mbassador_version}")  {
+		transitive = false
+	}
+
 }
 
 processResources {
@@ -84,6 +88,7 @@ publishing {
 }
 
 repositories {
+   mavenCentral()
    maven {
       url 'https://dl.bintray.com/earthcomputer/mods'
    }
