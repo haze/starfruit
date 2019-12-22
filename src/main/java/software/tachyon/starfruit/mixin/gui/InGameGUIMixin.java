@@ -29,7 +29,7 @@ public abstract class InGameGUIMixin extends DrawableHelper {
 
     @Inject(method = "render", at = @At("RETURN"))
     public void render(float tickDelta, CallbackInfo ci) {
-        final boolean shouldDraw = !this.client.options.hudHidden;
+        final boolean shouldDraw = !this.client.options.hudHidden && !this.client.options.debugEnabled;
         if (shouldDraw) {
             float y = START_Y;
             final Iterator<StatefulModule> iter = StarfruitMod.getModuleManager().getDisplay().iterator();
