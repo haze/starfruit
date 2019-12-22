@@ -27,7 +27,7 @@ public class StarfruitMod implements ModInitializer {
     private final static File DEV_ACCOUNT_FILE = Paths.get(System.getProperty("user.home"), ".secret/.minecraft")
             .toFile();
 
-    public final static MinecraftClientMixin minecraft = (MinecraftClientMixin) MinecraftClient.getInstance();
+    public final static MinecraftClient minecraft = MinecraftClient.getInstance();
 
     public static ModuleManager getModuleManager() {
         return ModuleManager.getInstance();
@@ -43,7 +43,7 @@ public class StarfruitMod implements ModInitializer {
                 final String email = scanner.nextLine();
                 final String password = scanner.nextLine();
                 scanner.close();
-                minecraft.setSession(AccountUtil.createSession(email, password));
+                ((MinecraftClientMixin)minecraft).setSession(AccountUtil.createSession(email, password));
             } catch (Exception ignored) {
             }
         }
