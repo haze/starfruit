@@ -8,19 +8,21 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import net.engio.mbassy.bus.MBassador;
 import net.minecraft.entity.LivingEntity;
+import software.tachyon.starfruit.StarfruitMod;
 import software.tachyon.starfruit.module.ModuleManager;
+import software.tachyon.starfruit.module.event.Event;
 import software.tachyon.starfruit.module.event.SprintChangeEvent;
 
 @Mixin(LivingEntity.class)
 public class LivingEntityMixin {
     @Inject(method = "setSprinting", at = @At("HEAD"), cancellable = true)
     public void setSprinting(boolean sprinting, CallbackInfo ci) {
-       final SprintChangeEvent event = new SprintChangeEvent(sprinting);
-       MBassador bus = ModuleManager.getModuleManager().getBus();
-       bus.post(event).now();
+        final SprintChangeEvent event = new SprintChangeEvent(sprinting);
+        MBassador<Event> bus = StarfruitMod.getModuleManager().getBus();
+        bus.post(event).now();
 
-       if (event.isCancelled()) {
-           ci.cancel();
-       }
+        if (event.isCancelled()) {
+            ci.cancel();
+        }
     }
 }

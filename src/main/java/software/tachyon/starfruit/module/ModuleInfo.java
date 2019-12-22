@@ -15,7 +15,7 @@ public class ModuleInfo {
     }
 
     public enum Category {
-        MOVEMENT("Movement");
+        MOVEMENT("Movement"), RENDER("Render");
 
         public String normalized = null;
 
@@ -23,7 +23,7 @@ public class ModuleInfo {
             this.normalized = normalized;
         }
     }
-    
+
     public static class Builder {
         private String name = null;
         private Category category = null;
@@ -48,5 +48,5 @@ public class ModuleInfo {
             return new ModuleInfo(this.name, this.category, this.color);
         }
     }
-   
+
 }

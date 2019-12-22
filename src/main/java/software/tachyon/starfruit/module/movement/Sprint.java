@@ -6,8 +6,6 @@ import software.tachyon.starfruit.module.StatefulModule;
 import software.tachyon.starfruit.module.ModuleInfo.Category;
 import software.tachyon.starfruit.module.event.SprintChangeEvent;
 
-import java.awt.Color;
-
 import net.engio.mbassy.listener.Handler;
 import net.engio.mbassy.listener.Listener;
 import net.engio.mbassy.listener.References;
@@ -15,14 +13,12 @@ import net.engio.mbassy.listener.References;
 @Listener(references = References.Strong)
 public class Sprint extends StatefulModule {
 
-    public Sprint(int keyCode) {
-        super(keyCode);
-        this.info = new ModuleInfo.Builder()
-          .name("Sprint")
-          .color(Color.magenta)
-          .category(Category.MOVEMENT)
-          .build();
-    }
+  public Sprint(int keyCode) {
+    super(keyCode);
+    // magenta
+    this.info = new ModuleInfo.Builder().name("Sprint").color(StarfruitMod.Colors.moduleColor(0.83F))
+        .category(Category.MOVEMENT).build();
+  }
 
   @Override
   public void onEnable() {
@@ -41,5 +37,4 @@ public class Sprint extends StatefulModule {
     event.setCancelled(true);
   }
 
-    
 }

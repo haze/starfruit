@@ -1,22 +1,24 @@
 package software.tachyon.starfruit.module;
 
+import software.tachyon.starfruit.StarfruitMod;
+
 public abstract class StatefulModule extends Module {
 
     private Integer catalystKeyCode = null;
     private boolean state;
 
     protected ModuleInfo info;
-    
+
     public StatefulModule(int keyCode) {
         this.catalystKeyCode = keyCode;
     }
 
     protected void onEnable() {
-        ModuleManager.getModuleManager().getBus().subscribe(this);
+        StarfruitMod.getModuleManager().getBus().subscribe(this);
     }
 
     protected void onDisable() {
-        ModuleManager.getModuleManager().getBus().unsubscribe(this);
+        StarfruitMod.getModuleManager().getBus().unsubscribe(this);
     }
 
     Integer getKeyCode() {
