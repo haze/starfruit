@@ -17,7 +17,7 @@ public class StarfruitMod implements ModInitializer {
     }
 
     public final static String DISPLAY_NAME = "Starfruit";
-    private final static File DEV_ACCOUNT_FILE = Paths.get(System.getProperty("user.home"), ".secret/minecraft")
+    private final static File DEV_ACCOUNT_FILE = Paths.get(System.getProperty("user.home"), ".secret/.minecraft")
             .toFile();
 
     public final static MinecraftClientMixin minecraft = (MinecraftClientMixin) MinecraftClient.getInstance();
