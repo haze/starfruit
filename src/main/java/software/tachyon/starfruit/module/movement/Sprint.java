@@ -22,14 +22,14 @@ public class Sprint extends StatefulModule {
 
   @Override
   public void onEnable() {
-    StarfruitMod.minecraft.getPlayer().setSprinting(true);
+    StarfruitMod.minecraft.player.setSprinting(true);
     super.onEnable();
   }
 
   @Override
   public void onDisable() {
     super.onDisable();
-    StarfruitMod.minecraft.getPlayer().setSprinting(false);
+    StarfruitMod.minecraft.player.setSprinting(false);
   }
 
   @Handler

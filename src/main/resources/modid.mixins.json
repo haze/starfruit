@@ -8,7 +8,8 @@
     "gui.InGameGUIMixin",
     "gui.TitleScreenMixin",
     "entity.LivingEntityMixin",
-    "client.KeyboardMixin"
+    "client.KeyboardMixin",
+    "world.DimensionMixin"
   ],
   "injectors": {
     "defaultRequire": 1
