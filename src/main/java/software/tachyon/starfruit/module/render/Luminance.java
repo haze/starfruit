@@ -21,61 +21,62 @@ import net.minecraft.world.dimension.Dimension;
 public class Luminance extends StatefulModule {
 
     class AdjustLuminanceTask implements Runnable {
-        private final float desiredLightmapValue;
+        private Optional<Double> desiredLightmapValue = Optional.empty();
         private float[] initialLightmap;
-        private long startMS;
-        private final MinecraftClient client;
+        private float[] cachedLightmap;
 
-        AdjustLuminanceTask(float desiredLightmapValue, MinecraftClient client) {
-            this.desiredLightmapValue = desiredLightmapValue;
-            this.client = client;
+        private long transitionTimeMS;
+        private long startMS;
+
+        AdjustLuminanceTask(long transitionTimeMS) {
+            this.transitionTimeMS = transitionTimeMS;
         }
 
         boolean isFinished() {
-            return Thread.interrupted() || System.currentTimeMillis() - this.startMS > 1500;
+            return Thread.interrupted() || System.currentTimeMillis() - this.startMS > this.transitionTimeMS;
         }
 
-        private float bounceOut(float x) {
-            float n1 = 7.5625F;
-            float d1 = 2.75F;
-        
-            if (x < 1 / d1) {
-                return n1 * x * x;
-            } else if (x < 2 / d1) {
-                return n1 * (x -= 1.5F / d1) * x + 0.75F;
-            } else if (x < 2.5 / d1) {
-                return n1 * (x -= 2.25F / d1) * x + 0.9375F;
-            } else {
-                return n1 * (x -= 2.625F / d1) * x + 0.984375F;
-            }
+        void resetTimer() {
+            this.startMS = System.currentTimeMillis();
         }
 
-        private float easeInOutBounce(float x) {
-            return x < 0.5F ? (1F - bounceOut(1F - 2F * x)) / 2F : (1F + bounceOut(2F * x - 1F)) / 2F;
+        private double easeFunc(double x) {
+            return 1 - Math.sqrt(1 - Math.pow(x, 2));
         }
-    
 
         public void run() {
-            DimensionMixin dim = ((DimensionMixin)StarfruitMod.minecraft.world.dimension);
-            this.startMS = System.currentTimeMillis();
+            DimensionMixin dim = ((DimensionMixin) StarfruitMod.minecraft.world.dimension);
+            this.resetTimer();
             while (!this.isFinished()) {
                 final long timeDiff = System.currentTimeMillis() - this.startMS;
-                final float eased = bounceOut(timeDiff / 1500F);
-                for(int i = 0; i < dim.getLightLevelToBrightness().length; i++) {
-                    dim.getLightLevelToBrightness()[i] = MathHelper.lerp(eased, this.initialLightmap[i], Math.max(this.desiredLightmapValue, this.initialLightmap[i]));
+                // final double eased = easeFunc(timeDiff / (double) this.transitionTimeMS);
+                final double eased = timeDiff / (double) this.transitionTimeMS;
+                for (int i = 0; i < dim.getLightLevelToBrightness().length; i++) {
+                    final double newValue = this.desiredLightmapValue.isPresent()
+                            ? MathHelper.lerp(eased, this.initialLightmap[i],
+                                    Math.max(this.desiredLightmapValue.get(), this.initialLightmap[i]))
+                            : MathHelper.lerp(eased, this.cachedLightmap[i], this.initialLightmap[i]);
+                    dim.getLightLevelToBrightness()[i] = (float) newValue;
                 }
-                // curMS = System.currentTimeMillis();
             }
         }
 
         public void setInitialLightmap(float[] lightmap) {
             this.initialLightmap = lightmap;
         }
+
+        public void cacheLightmap() {
+            DimensionMixin dim = ((DimensionMixin) StarfruitMod.minecraft.world.dimension);
+            this.cachedLightmap = dim.getLightLevelToBrightness().clone();
+        }
+
+        public void setDesiredLightmapValue(Optional<Double> newValue) {
+            this.desiredLightmapValue = newValue;
+        }
     }
 
     private AdjustLuminanceTask adjustLuminanceTask = null;
     private Optional<Future<Void>> runningAdjustmentTask = Optional.empty();
-    private double savedGamma = 0;
 
     private float[] initialLightmap = null;
 
@@ -83,26 +84,40 @@ public class Luminance extends StatefulModule {
         super(keyCode);
         this.info = new ModuleInfo.Builder().name("Luminance").color(StarfruitMod.Colors.moduleColor(0.18F))
                 .category(Category.MOVEMENT).build();
-        this.adjustLuminanceTask = new AdjustLuminanceTask(0.2F, StarfruitMod.minecraft);
+        this.adjustLuminanceTask = new AdjustLuminanceTask(750);
     }
 
     @Override
-    @SuppressWarnings("unchecked") // TODO(haze): is this really needed?
     public void onEnable() {
-        this.initialLightmap = ((DimensionMixin)StarfruitMod.minecraft.world.dimension).getLightLevelToBrightness().clone();
-        this.savedGamma = StarfruitMod.minecraft.options.gamma;
-        this.adjustLuminanceTask.setInitialLightmap(this.initialLightmap);
+        this.initialLightmap = ((DimensionMixin) StarfruitMod.minecraft.world.dimension).getLightLevelToBrightness()
+                .clone();
+        this.adjustLuminanceTask.setDesiredLightmapValue(Optional.of(0.25));
+        if (!this.isTaskRunning())
+            this.adjustLuminanceTask.setInitialLightmap(this.initialLightmap);
+        this.launchAdjustmentTask();
+        super.onEnable();
+    }
+
+    @SuppressWarnings("unchecked")
+    void launchAdjustmentTask() {
         this.runningAdjustmentTask = Optional
                 .of((Future<Void>) StarfruitMod.getModuleManager().getThreadPool().submit(this.adjustLuminanceTask));
-        super.onEnable();
+    }
+
+    boolean isTaskRunning() {
+        return this.runningAdjustmentTask.isPresent() && !this.runningAdjustmentTask.get().isDone();
     }
 
     @Override
     public void onDisable() {
-        this.runningAdjustmentTask.ifPresent(task -> task.cancel(true)); // cancel running task if there is any
-        this.runningAdjustmentTask = Optional.empty();
+        // reuse task if available, otherwise restart
+        this.adjustLuminanceTask.cacheLightmap();
+        this.adjustLuminanceTask.setDesiredLightmapValue(Optional.empty());
+        if (!this.isTaskRunning()) {
+            this.launchAdjustmentTask();
+        } else {
+            this.adjustLuminanceTask.resetTimer();
+        }
         super.onDisable();
-        StarfruitMod.minecraft.options.gamma = this.savedGamma;
-        this.savedGamma = 0;
     }
 }
