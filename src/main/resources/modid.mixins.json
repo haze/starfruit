@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "software.tachyon.starfruit.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [],
+  "client": [
+    "MinecraftClientMixin",
+    "gui.InGameGUIMixin",
+    "gui.TitleScreenMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

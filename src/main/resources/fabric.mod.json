@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "modid",
+  "version": "${version}",
+  "name": "Starfruit",
+  "description": "The fruit has distinctive ridges running down its sides (usually five but can occasionally vary); when cut in cross-section, it resembles a star, hence its name.[2] The entire fruit is edible and is usually eaten out of hand. They may also be used in cooking and can be made into relishes, preserves, and juice drinks.",
+  "authors": [
+    "Haze Booth <isnt@haze.cool>"
+  ],
+  "contact": {
+    "homepage": "https://tachyon.software/",
+    "sources": "https://github.com/haze/starfruit"
+  },
+  "license": "CC0-1.0",
+  "icon": "assets/modid/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "software.tachyon.starfruit.StarfruitMod"
+    ]
+  },
+  "mixins": [
+    "modid.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.7.2",
+    "fabric": "*",
+    "minecraft": "1.15.x"
+  },
+  "suggests": {
+    "flamingo": "*"
+  }
+}
