@@ -4,8 +4,11 @@ import net.engio.mbassy.bus.MBassador;
 import net.engio.mbassy.listener.Handler;
 import net.engio.mbassy.listener.Listener;
 import net.engio.mbassy.listener.References;
+
+import software.tachyon.starfruit.module.event.Event;
 import software.tachyon.starfruit.module.event.KeyPressEvent;
 import software.tachyon.starfruit.module.movement.Sprint;
+import software.tachyon.starfruit.module.render.Luminance;
 import static org.lwjgl.glfw.GLFW.*;
 
 import java.util.HashMap;
@@ -13,25 +16,31 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Listener(references = References.Strong)
 public class ModuleManager {
 
-    private MBassador bus = null;
+    private MBassador<Event> bus = null;
     private static ModuleManager INSTANCE = null;
 
     private Map<Integer, StatefulModule> modules = null;
     private SortedSet<StatefulModule> display = null;
 
+    private ExecutorService threadPool = null;
+
     public ModuleManager() {
-        this.bus = new MBassador();
+        this.bus = new MBassador<>();
 
         this.modules = new HashMap<>();
-        this.display = new TreeSet<>((StatefulModule m1, StatefulModule m2) -> m1.getInfo().name.compareTo(m2.getInfo().name));
-        
-        System.out.println("Bruh boyz");
+        this.display = new TreeSet<>(
+                (StatefulModule m1, StatefulModule m2) -> m1.getInfo().name.compareTo(m2.getInfo().name));
+        this.threadPool = Executors.newCachedThreadPool();
+
         this.bus.subscribe(this);
         this.register(new Sprint(GLFW_KEY_C));
+        this.register(new Luminance(GLFW_KEY_B));
     }
 
     public void register(StatefulModule mod) {
@@ -40,7 +49,7 @@ public class ModuleManager {
 
     @Handler
     public void onKeyPress(KeyPressEvent event) {
-        System.out.println("I got a key press " + event.getKeyPressed());
+        // System.out.println("I got a key press " + event.getKeyPressed());
         Optional.ofNullable(this.modules.get(event.getKeyPressed())).ifPresent((module) -> {
             final boolean newState = !module.getState();
             module.setState(newState);
@@ -55,7 +64,7 @@ public class ModuleManager {
         });
     }
 
-    public MBassador getBus() {
+    public MBassador<Event> getBus() {
         return this.bus;
     }
 
@@ -63,7 +72,11 @@ public class ModuleManager {
         return this.display;
     }
 
-    public static ModuleManager getModuleManager() {
+    public ExecutorService getThreadPool() {
+        return this.threadPool;
+    }
+
+    public static ModuleManager getInstance() {
         if (INSTANCE == null)
             INSTANCE = new ModuleManager();
 

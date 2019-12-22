@@ -9,6 +9,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.ParentElement;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.util.Session;
+import software.tachyon.starfruit.StarfruitMod;
 import software.tachyon.starfruit.module.ModuleManager;
 import software.tachyon.starfruit.module.event.KeyPressEvent;
 
@@ -21,10 +22,10 @@ public abstract class KeyboardMixin {
 
     @Inject(method = "onKey", at = @At("RETURN"))
     public void onKey(long window, int key, int scancode, int i, int j, CallbackInfo ci) {
-      if (this.getClient().currentScreen == null && i == 0) {
-          System.out.printf("I pressed the key %d", key);
-          ModuleManager.getModuleManager().getBus().post(new KeyPressEvent(key)).asynchronously();
-      }
+        if (this.getClient().currentScreen == null && i == 0) {
+            // System.out.printf("I pressed the key %d", key);
+            StarfruitMod.getModuleManager().getBus().post(new KeyPressEvent(key)).now();
+        }
     }
 
     @Accessor

@@ -1,6 +1,6 @@
 package software.tachyon.starfruit.module.event;
 
-public class SprintChangeEvent implements Cancellable {
+public class SprintChangeEvent extends Event implements Cancellable {
 
     private final boolean newState;
     private boolean cancelled = false;
