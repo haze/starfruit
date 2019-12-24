@@ -2,12 +2,11 @@ package software.tachyon.starfruit.module.render;
 
 import java.util.Optional;
 
-import org.joml.Vector3f;
-
 import net.engio.mbassy.listener.Handler;
 import net.engio.mbassy.listener.Listener;
 import net.engio.mbassy.listener.References;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.entity.Entity;
 import software.tachyon.starfruit.StarfruitMod;
 import software.tachyon.starfruit.module.ModuleInfo;
@@ -34,11 +33,11 @@ public class Tracer extends StatefulModule {
                 final float z = (float) ent.getPos().z;
                 System.out.println(ent.getName().getString());
                 try {
-                    final Optional<Vector3f> screenPos = ProjectionUtility.project(x, y, z, true);
+                    final Optional<Vector3f> screenPos = ProjectionUtility.project(x, y, z, false);
                     screenPos.ifPresent(pos -> {
-                        System.out.printf("%.3f, %.3f, %.3f\n", pos.x, pos.y, pos.z);
+                        System.out.printf("%.3f, %.3f, %.3f\n", pos.getX(), pos.getY(), pos.getZ());
                         final TextRenderer rend = StarfruitMod.minecraft.textRenderer;
-                        rend.drawWithShadow(ent.getName().getString(), pos.y, pos.z,
+                        rend.drawWithShadow(ent.getName().getString(), pos.getX(), pos.getY(),
                                 StarfruitMod.getGlobalIridescence().getRGB());
                     });
                 } catch (Throwable t) {

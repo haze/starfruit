@@ -25,11 +25,11 @@ public class GameRendererMixin {
     private void renderWorld(float f, long j, MatrixStack stack, CallbackInfo ci) {
         GL11.glPushMatrix();
 
-        GL11.glColor4d(1, 1, 1, 1);
-        GL11.glRotated(camera.getPitch(), 1, 0, 0);
-        GL11.glRotated(camera.getYaw() - 180, 0, 1, 0);
+        // GL11.glColor4d(1, 1, 1, 1);
+        // GL11.glRotated(camera.getPitch(), 1, 0, 0);
+        // GL11.glRotated(camera.getYaw() - 180, 0, 1, 0);
 
-        ProjectionUtility.updateViewport(StarfruitMod.minecraft.getWindow());
+        ProjectionUtility.updateViewport(stack, StarfruitMod.minecraft.getWindow());
 
         // Energetic.getEnergetic().getEventManager().fireEvent(new
         // RenderWorldEvent(matrixStack, partialTicks));

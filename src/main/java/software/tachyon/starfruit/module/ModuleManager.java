@@ -9,6 +9,7 @@ import net.minecraft.server.network.packet.ChatMessageC2SPacket;
 import software.tachyon.starfruit.module.event.api.Event;
 import software.tachyon.starfruit.module.event.KeyPressEvent;
 import software.tachyon.starfruit.module.event.SendPacketEvent;
+import software.tachyon.starfruit.module.movement.Flight;
 import software.tachyon.starfruit.module.movement.Sprint;
 import software.tachyon.starfruit.module.render.Luminance;
 import software.tachyon.starfruit.module.render.Tracer;
@@ -21,7 +22,6 @@ import static org.lwjgl.glfw.GLFW.*;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 import java.util.Optional;
@@ -61,7 +61,7 @@ public class ModuleManager {
         this.register(new Sprint(GLFW_KEY_C));
         this.register(new Luminance(GLFW_KEY_B));
         this.register(new Tracer(GLFW_KEY_J));
-
+        this.register(new Flight(GLFW_KEY_K));
     }
 
     public void registerVariables(StatefulModule mod) {
