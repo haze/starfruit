@@ -1,5 +1,7 @@
 package software.tachyon.starfruit.module.event;
 
+import software.tachyon.starfruit.module.event.api.Event;
+
 public class KeyPressEvent extends Event {
 
     private final int keyPressed;
