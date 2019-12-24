@@ -2,16 +2,14 @@ package software.tachyon.starfruit.mixin.entity;
 
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.Mixin;
 
 import net.engio.mbassy.bus.MBassador;
 import net.minecraft.entity.LivingEntity;
 import software.tachyon.starfruit.StarfruitMod;
-import software.tachyon.starfruit.module.ModuleManager;
-import software.tachyon.starfruit.module.event.Event;
 import software.tachyon.starfruit.module.event.SprintChangeEvent;
+import software.tachyon.starfruit.module.event.api.Event;
 
 @Mixin(LivingEntity.class)
 public class LivingEntityMixin {

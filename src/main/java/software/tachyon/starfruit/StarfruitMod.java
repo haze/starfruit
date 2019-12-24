@@ -7,19 +7,28 @@ import java.awt.Color;
 
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.network.MessageType;
+import net.minecraft.text.LiteralText;
+import net.minecraft.util.math.MathHelper;
 import software.tachyon.starfruit.mixin.MinecraftClientMixin;
 import software.tachyon.starfruit.module.ModuleManager;
 import software.tachyon.starfruit.util.AccountUtil;
+import software.tachyon.starfruit.utility.HexShift;
 
 public class StarfruitMod implements ModInitializer {
 
+    public static final char COLOR_SEPARATOR = '\u00A7';
+
     public static class Colors {
-        // public static final Color GREEN = new Color(130, 235, 224, 124); // #82ebe0
         static float MODULE_SAT = 0.4F;
         static float MODULE_LUM = 1F;
 
         public static Color moduleColor(float hue) {
             return Color.getHSBColor(hue, MODULE_SAT, MODULE_LUM);
+        }
+
+        public static String colorize(String input, char code) {
+            return String.format("%c%c%s%cr", COLOR_SEPARATOR, code, input, COLOR_SEPARATOR);
         }
     }
 
@@ -33,6 +42,29 @@ public class StarfruitMod implements ModInitializer {
         return ModuleManager.getInstance();
     }
 
+    final static float iridescenceSaturation = 0.4F;
+    final static float iridescenceBrightness = 1F;
+
+    public static Color getGlobalIridescence() {
+        final float hue = (System.currentTimeMillis() / 8) % 360;
+        return Color.getHSBColor(hue / 360, iridescenceSaturation, iridescenceBrightness);
+    }
+
+    public static void info(String format, Object... items) {
+        consoleInfo(format, items);
+
+        final String formatted = String.format("%cFFB972Starfruit%cr %s", HexShift.CATALYST_CHAR, COLOR_SEPARATOR,
+                String.format(format, items));
+
+        if (minecraft.inGameHud != null)
+            minecraft.inGameHud.addChatMessage(MessageType.SYSTEM, new LiteralText(formatted));
+    }
+
+    public static void consoleInfo(String format, Object... items) {
+        final String consoleFormatted = String.format("Starfruit:info %s", String.format(format, items)).trim();
+        System.out.println(consoleFormatted);
+    }
+
     // attemptDirectLogin tries to login given a minecraft account
     // specified in $HOME/.secret/minecraft for easy access to a session
     // during development
@@ -43,7 +75,7 @@ public class StarfruitMod implements ModInitializer {
                 final String email = scanner.nextLine();
                 final String password = scanner.nextLine();
                 scanner.close();
-                ((MinecraftClientMixin)minecraft).setSession(AccountUtil.createSession(email, password));
+                ((MinecraftClientMixin) minecraft).setSession(AccountUtil.createSession(email, password));
             } catch (Exception ignored) {
             }
         }
@@ -52,6 +84,6 @@ public class StarfruitMod implements ModInitializer {
     @Override
     public void onInitialize() {
         attemptDirectLogin();
-        System.out.println("Hello Fabric world!");
+        info("onInitialize()");
     }
 }

@@ -23,7 +23,6 @@ public abstract class KeyboardMixin {
     @Inject(method = "onKey", at = @At("RETURN"))
     public void onKey(long window, int key, int scancode, int i, int j, CallbackInfo ci) {
         if (this.getClient().currentScreen == null && i == 0) {
-            // System.out.printf("I pressed the key %d", key);
             StarfruitMod.getModuleManager().getBus().post(new KeyPressEvent(key)).now();
         }
     }

@@ -36,9 +36,9 @@ public class TitleScreenMixin extends Screen {
             final int red = (rgb >> 16) & 0xFF;
             final int green = (rgb >> 8) & 0xFF;
             final int blue = rgb & 0xFF;
-            final Color brandColor = new Color(red, green, blue, (int) (g * 255));
+            int brandColor = (StarfruitMod.getGlobalIridescence().getRGB() & 0x00FFFFFF) | l;
             this.drawString(this.font, StarfruitMod.DISPLAY_NAME, 2,
-                    this.height - (this.font.fontHeight * 2) - brandPadding, brandColor.getRGB());
+                    this.height - (this.font.fontHeight * 2) - brandPadding, brandColor);
         }
     }
 }

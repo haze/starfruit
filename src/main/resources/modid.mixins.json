@@ -7,9 +7,11 @@
     "MinecraftClientMixin",
     "gui.InGameGUIMixin",
     "gui.TitleScreenMixin",
+    "gui.TextRendererMixin",
     "entity.LivingEntityMixin",
     "client.KeyboardMixin",
-    "world.DimensionMixin"
+    "world.DimensionMixin",
+    "network.ClientPlayNetworkHandlerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

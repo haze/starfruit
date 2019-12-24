@@ -2,16 +2,24 @@ package software.tachyon.starfruit.module;
 
 import java.awt.Color;
 
+import software.tachyon.starfruit.StarfruitMod;
+
 public class ModuleInfo {
 
     public String name;
     public Category category;
     public Color color;
+    private final String colorHex;
+
+    public String hexDisplayString() {
+        return String.format("%c%s%s%cr", '\u0666', this.colorHex, this.name, StarfruitMod.COLOR_SEPARATOR);
+    }
 
     ModuleInfo(String name, Category category, Color color) {
         this.name = name;
         this.category = category;
         this.color = color;
+        this.colorHex = Integer.toHexString(this.color.getRGB()).substring(2).toUpperCase();
     }
 
     public enum Category {
