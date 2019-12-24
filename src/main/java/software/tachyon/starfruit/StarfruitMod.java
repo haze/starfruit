@@ -12,7 +12,7 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.util.math.MathHelper;
 import software.tachyon.starfruit.mixin.MinecraftClientMixin;
 import software.tachyon.starfruit.module.ModuleManager;
-import software.tachyon.starfruit.util.AccountUtil;
+import software.tachyon.starfruit.utility.AccountUtil;
 import software.tachyon.starfruit.utility.HexShift;
 
 public class StarfruitMod implements ModInitializer {
@@ -20,8 +20,8 @@ public class StarfruitMod implements ModInitializer {
     public static final char COLOR_SEPARATOR = '\u00A7';
 
     public static class Colors {
-        static float MODULE_SAT = 0.4F;
-        static float MODULE_LUM = 1F;
+        static float MODULE_SAT = 0.5F;
+        static float MODULE_LUM = 0.9F;
 
         public static Color moduleColor(float hue) {
             return Color.getHSBColor(hue, MODULE_SAT, MODULE_LUM);

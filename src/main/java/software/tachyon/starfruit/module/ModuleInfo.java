@@ -32,6 +32,10 @@ public class ModuleInfo {
         }
     }
 
+    public static Builder init() {
+        return new Builder();
+    }
+
     public static class Builder {
         private String name = null;
         private Category category = null;
@@ -53,6 +57,8 @@ public class ModuleInfo {
         }
 
         public ModuleInfo build() {
+            if (this.color == null)
+                this.color = StarfruitMod.Colors.moduleColor((float) Math.random());
             return new ModuleInfo(this.name, this.category, this.color);
         }
     }

@@ -15,9 +15,7 @@ public class Sprint extends StatefulModule {
 
   public Sprint(int keyCode) {
     super(keyCode);
-    // magenta
-    this.info = new ModuleInfo.Builder().name("Sprint").color(StarfruitMod.Colors.moduleColor(0.83F))
-        .category(Category.MOVEMENT).build();
+    this.info = new ModuleInfo.Builder().name("Sprint").category(Category.MOVEMENT).build();
   }
 
   @Override

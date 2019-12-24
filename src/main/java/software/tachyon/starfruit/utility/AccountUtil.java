@@ -1,4 +1,4 @@
-package software.tachyon.starfruit.util;
+package software.tachyon.starfruit.utility;
 
 import net.minecraft.client.util.Session;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;

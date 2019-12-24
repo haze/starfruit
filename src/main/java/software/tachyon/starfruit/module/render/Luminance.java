@@ -108,8 +108,7 @@ public class Luminance extends StatefulModule {
 
     public Luminance(int keyCode) {
         super(keyCode);
-        this.info = new ModuleInfo.Builder().name("Luminance").color(StarfruitMod.Colors.moduleColor(0.18F))
-                .category(Category.MOVEMENT).build();
+        this.info = new ModuleInfo.Builder().name("Luminance").category(Category.MOVEMENT).build();
         this.fadeTime = new Variable.Int(1000);
         this.adjustLuminanceTask = new AdjustLuminanceTask(this.fadeTime);
     }

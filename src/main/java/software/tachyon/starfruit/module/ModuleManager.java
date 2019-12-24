@@ -11,6 +11,7 @@ import software.tachyon.starfruit.module.event.KeyPressEvent;
 import software.tachyon.starfruit.module.event.SendPacketEvent;
 import software.tachyon.starfruit.module.movement.Sprint;
 import software.tachyon.starfruit.module.render.Luminance;
+import software.tachyon.starfruit.module.render.Tracer;
 import software.tachyon.starfruit.module.variable.Variable;
 import software.tachyon.starfruit.utility.HexShift;
 import software.tachyon.starfruit.StarfruitMod;
@@ -50,8 +51,8 @@ public class ModuleManager {
         this.commandParser = new Parser();
 
         this.modules = new HashMap<>();
-        this.display = new TreeSet<>(
-                (StatefulModule m1, StatefulModule m2) -> m1.getInfo().name.compareTo(m2.getInfo().name));
+        this.display = new TreeSet<>((StatefulModule a, StatefulModule b) -> ((Integer) b.getInfo().name.length())
+                .compareTo(a.getInfo().name.length()));
         this.moduleNameCache = new HashMap<>();
         this.variableCache = new HashMap<>();
         this.threadPool = Executors.newCachedThreadPool();
@@ -59,6 +60,8 @@ public class ModuleManager {
         this.bus.subscribe(this);
         this.register(new Sprint(GLFW_KEY_C));
         this.register(new Luminance(GLFW_KEY_B));
+        this.register(new Tracer(GLFW_KEY_J));
+
     }
 
     public void registerVariables(StatefulModule mod) {
