@@ -18,6 +18,7 @@ import software.tachyon.starfruit.utility.HexShift;
 public class StarfruitMod implements ModInitializer {
 
     public static final char COLOR_SEPARATOR = '\u00A7';
+    private static ModuleManager moduleManager;
 
     public static class Colors {
         static float MODULE_SAT = 0.5F;
@@ -35,11 +36,15 @@ public class StarfruitMod implements ModInitializer {
     public final static String DISPLAY_NAME = "Starfruit";
     private final static File DEV_ACCOUNT_FILE = Paths.get(System.getProperty("user.home"), ".secret/.minecraft")
             .toFile();
+    private final static File MODULE_SETTINGS_FILE = Paths.get(System.getProperty("user.home"), ".starfruit.properties")
+            .toFile();
 
     public final static MinecraftClient minecraft = MinecraftClient.getInstance();
 
     public static ModuleManager getModuleManager() {
-        return ModuleManager.getInstance();
+        if (moduleManager == null)
+            moduleManager = new ModuleManager(MODULE_SETTINGS_FILE);
+        return moduleManager;
     }
 
     final static float iridescenceSaturation = 0.4F;
@@ -81,9 +86,16 @@ public class StarfruitMod implements ModInitializer {
         }
     }
 
+    private void registerShutdownHook() {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("hi");
+        }));
+    }
+
     @Override
     public void onInitialize() {
         attemptDirectLogin();
+        registerShutdownHook();
         info("onInitialize()");
     }
 }

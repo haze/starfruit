@@ -4,6 +4,7 @@ import net.minecraft.client.render.Camera;
 import net.minecraft.client.util.GlAllocationUtils;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.util.math.Vector3d;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -43,7 +44,6 @@ public final class ProjectionUtility {
     private static int scaledWidth, scaledHeight;
     private static double cameraX, cameraY, cameraZ;
 
-
     public static void updateViewport(MatrixStack matrixStack, Window window) {
         scaledWidth = window.getScaledWidth();
         scaledHeight = window.getScaledHeight();
@@ -68,22 +68,17 @@ public final class ProjectionUtility {
     }
 
     private static void __gluMultMatrixVecf(FloatBuffer m, float[] in, float[] out) {
-        for(int i = 0; i < 4; ++i) {
-            out[i] = in[0] * m.get(m.position() + 0 + i) + in[1] * m.get(m.position() + 4 + i) + in[2] * m.get(m.position() + 8 + i) + in[3] * m.get(m.position() + 12 + i);
+        for (int i = 0; i < 4; ++i) {
+            out[i] = in[0] * m.get(m.position() + 0 + i) + in[1] * m.get(m.position() + 4 + i)
+                    + in[2] * m.get(m.position() + 8 + i) + in[3] * m.get(m.position() + 12 + i);
         }
     }
 
     private static final float[] in = new float[4];
-	private static final float[] out = new float[4];
+    private static final float[] out = new float[4];
 
-    public static boolean gluProject(
-        float objx,
-        float objy,
-        float objz,
-        FloatBuffer modelMatrix,
-        FloatBuffer projMatrix,
-        IntBuffer viewport,
-        FloatBuffer win_pos) {
+    public static boolean gluProject(float objx, float objy, float objz, FloatBuffer modelMatrix,
+            FloatBuffer projMatrix, IntBuffer viewport, FloatBuffer win_pos) {
 
         float[] in = ProjectionUtility.in;
         float[] out = ProjectionUtility.out;
@@ -114,14 +109,29 @@ public final class ProjectionUtility {
         return true;
     }
 
+    public static Optional<Vector3f> project(Vector3d vec, boolean allowOffScreen) {
+        return project(vec.x, vec.y, vec.z, allowOffScreen);
+    }
+
+    public static Optional<Vector3f> project(Vec3d vec, boolean allowOffScreen) {
+        return project(vec.x, vec.y, vec.z, allowOffScreen);
+    }
+
+    public static Optional<Vector3f> project(Vector3f vec, boolean allowOffScreen) {
+        return project((double) vec.getX(), (double) vec.getY(), (double) vec.getZ(), allowOffScreen);
+    }
+
     public static Optional<Vector3f> project(double x, double y, double z, boolean allowOffScreen) {
         final Vector3f out = new Vector3f(-1, -1, -1);
-        System.out.printf("%f, %f, %f\n", cameraX, cameraY, cameraZ);
-        gluProject((float)(x-cameraX), (float)(y-cameraY), (float)(z - cameraZ), MODELVIEW, PROJECTION, VIEWPORT, SCREEN_COORDS);
-        out.set(SCREEN_COORDS.get(SCREEN_COORDS_X_INDEX), SCREEN_COORDS.get(SCREEN_COORDS_Y_INDEX), SCREEN_COORDS.get(SCREEN_COORDS_Z_INDEX));
+        gluProject((float) (x - cameraX), (float) (y - cameraY), (float) (z - cameraZ), MODELVIEW, PROJECTION, VIEWPORT,
+                SCREEN_COORDS);
+        out.set(SCREEN_COORDS.get(SCREEN_COORDS_X_INDEX), SCREEN_COORDS.get(SCREEN_COORDS_Y_INDEX),
+                SCREEN_COORDS.get(SCREEN_COORDS_Z_INDEX));
 
-        // m.perspective((float) Math.toRadians(45), (float) scaledWidth / scaledHeight, 0.1f, 100f)
-        //         .project((float) (x - cameraX), (float) (y - cameraY), (float) (z - cameraZ), VIEWPORT, out);
+        // m.perspective((float) Math.toRadians(45), (float) scaledWidth / scaledHeight,
+        // 0.1f, 100f)
+        // .project((float) (x - cameraX), (float) (y - cameraY), (float) (z - cameraZ),
+        // VIEWPORT, out);
         if (out.getZ() > 0) {
             if (!allowOffScreen)
                 return Optional.empty();

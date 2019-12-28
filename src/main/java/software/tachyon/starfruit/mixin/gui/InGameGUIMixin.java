@@ -30,11 +30,17 @@ public abstract class InGameGUIMixin extends DrawableHelper {
     @Shadow
     private MinecraftClient client;
 
-    @Inject(method = "render", at = @At("RETURN"))
-    public void render(float tickDelta, CallbackInfo ci) {
+    @Inject(method = "render", at = @At("HEAD"))
+    public void renderPre(float partialTicks, CallbackInfo ci) {
         final MBassador<Event> bus = StarfruitMod.getModuleManager().getBus();
-        bus.post(new InGameHudDrawEvent(InGameHudDrawEvent.State.PRE)).now();
+        bus.post(new InGameHudDrawEvent(InGameHudDrawEvent.State.PRE, (double) partialTicks)).now();
+    }
+
+    @Inject(method = "render", at = @At("RETURN"))
+    public void renderPost(float partialTicks, CallbackInfo ci) {
+        final MBassador<Event> bus = StarfruitMod.getModuleManager().getBus();
         final boolean shouldDraw = !this.client.options.hudHidden && !this.client.options.debugEnabled;
+        bus.post(new InGameHudDrawEvent(InGameHudDrawEvent.State.POST, (double) partialTicks)).now();
         if (shouldDraw) {
             float y = START_Y;
             final Iterator<StatefulModule> iter = StarfruitMod.getModuleManager().getDisplay().iterator();
@@ -44,7 +50,6 @@ public abstract class InGameGUIMixin extends DrawableHelper {
                 y += this.client.textRenderer.fontHeight + MODULE_PADDING;
             }
         }
-        bus.post(new InGameHudDrawEvent(InGameHudDrawEvent.State.POST)).now();
     }
 
     void drawStringWithShadow(String text, float x, float y, Color color, float shadowDist) {

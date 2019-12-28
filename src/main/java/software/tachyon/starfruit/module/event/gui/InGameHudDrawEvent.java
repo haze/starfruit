@@ -7,13 +7,20 @@ public class InGameHudDrawEvent extends Event {
         PRE, POST
     }
 
+    private final double partialTicks;
+
+    public double getPartialTicks() {
+        return this.partialTicks;
+    }
+
     final State state;
 
     public State getState() {
         return this.state;
     }
 
-    public InGameHudDrawEvent(State state) {
+    public InGameHudDrawEvent(State state, double partialTicks) {
         this.state = state;
+        this.partialTicks = partialTicks;
     }
 }
