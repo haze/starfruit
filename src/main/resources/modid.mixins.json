@@ -8,6 +8,7 @@
     "gui.InGameGUIMixin",
     "gui.TitleScreenMixin",
     "gui.TextRendererMixin",
+    "gui.GameRendererMixin",
     "entity.LivingEntityMixin",
     "client.KeyboardMixin",
     "world.DimensionMixin",

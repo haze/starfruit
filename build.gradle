@@ -21,12 +21,14 @@ dependencies {
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modCompile "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
 	compileOnly("net.earthcomputer:multiconnect:${project.multiconnect_version}:api") {
 		transitive = false
-    }
+        }
+
 	compileOnly("net.earthcomputer:multiconnect:${project.multiconnect_version}") {
 		transitive = false
-    }
+        }
 
 	compile("net.engio:mbassador:${project.mbassador_version}")  {
 		transitive = false

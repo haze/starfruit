@@ -1,11 +1,14 @@
 package software.tachyon.starfruit.mixin.gui;
 
+import net.engio.mbassy.bus.MBassador;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.hud.InGameHud;
 import software.tachyon.starfruit.StarfruitMod;
 import software.tachyon.starfruit.module.ModuleInfo;
 import software.tachyon.starfruit.module.StatefulModule;
+import software.tachyon.starfruit.module.event.api.Event;
+import software.tachyon.starfruit.module.event.gui.InGameHudDrawEvent;
 
 import java.util.Iterator;
 
@@ -27,15 +30,23 @@ public abstract class InGameGUIMixin extends DrawableHelper {
     @Shadow
     private MinecraftClient client;
 
+    @Inject(method = "render", at = @At("HEAD"))
+    public void renderPre(float partialTicks, CallbackInfo ci) {
+        final MBassador<Event> bus = StarfruitMod.getModuleManager().getBus();
+        bus.post(new InGameHudDrawEvent(InGameHudDrawEvent.State.PRE, (double) partialTicks)).now();
+    }
+
     @Inject(method = "render", at = @At("RETURN"))
-    public void render(float tickDelta, CallbackInfo ci) {
+    public void renderPost(float partialTicks, CallbackInfo ci) {
+        final MBassador<Event> bus = StarfruitMod.getModuleManager().getBus();
         final boolean shouldDraw = !this.client.options.hudHidden && !this.client.options.debugEnabled;
+        bus.post(new InGameHudDrawEvent(InGameHudDrawEvent.State.POST, (double) partialTicks)).now();
         if (shouldDraw) {
             float y = START_Y;
             final Iterator<StatefulModule> iter = StarfruitMod.getModuleManager().getDisplay().iterator();
             while (iter.hasNext()) {
                 final ModuleInfo info = iter.next().getInfo();
-                drawStringWithShadow(info.name, START_X, y, info.color, 0.70F);
+                drawStringWithShadow(info.name, START_X, y, info.color, 0.5F);
                 y += this.client.textRenderer.fontHeight + MODULE_PADDING;
             }
         }

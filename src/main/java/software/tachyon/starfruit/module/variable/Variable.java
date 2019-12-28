@@ -1,6 +1,11 @@
 package software.tachyon.starfruit.module.variable;
 
+import java.util.Arrays;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.regex.Pattern;
+
+import com.google.common.collect.Streams;
 
 import software.tachyon.starfruit.StarfruitMod;
 
@@ -31,7 +36,25 @@ public abstract class Variable<T> {
 
     public static class Bool extends Variable<Boolean> {
         public String getDisplay() {
-            return this.get() ? StarfruitMod.Colors.colorize("yes", 'a') : StarfruitMod.Colors.colorize("no", 'c');
+            return this.get() ? StarfruitMod.Colors.colorize("on", 'a') : StarfruitMod.Colors.colorize("off", 'c');
+        }
+
+        static final String[] yesPatterns = new String[] { "yes", "on", };
+        static final String[] noPatterns = new String[] { "no", "off", "nil" };
+        public static final String patternStr = Streams.concat(Arrays.stream(yesPatterns), Arrays.stream(noPatterns))
+                .collect(Collectors.joining("|"));
+        public static final Pattern yesNo = Pattern.compile(patternStr);
+
+        public static Optional<Boolean> parse(String input) {
+            System.out.println("input = ");
+            System.out.println(input);
+            for (String yes : yesPatterns)
+                if (input.equalsIgnoreCase(yes))
+                    return Optional.of(true);
+            for (String no : noPatterns)
+                if (input.equalsIgnoreCase(no))
+                    return Optional.of(false);
+            return Optional.empty();
         }
 
         public Bool(Boolean initial) {
@@ -78,5 +101,28 @@ public abstract class Variable<T> {
     public Optional<String> getName() {
         return this.givenFieldName;
     }
+
+    public Optional<Kind> getKind() {
+        return Kind.forVariable(this);
+    }
+
+    public static enum Kind {
+        Integer, Double, Boolean, String;
+
+        public static Optional<Kind> forVariable(Variable<?> variable) {
+            if (variable instanceof Variable.Int) {
+                return Optional.of(Kind.Integer);
+            } else if (variable instanceof Variable.Dbl) {
+                return Optional.of(Kind.Double);
+            } else if (variable instanceof Variable.Bool) {
+                return Optional.of(Kind.Boolean);
+            } else if (variable instanceof Variable.Str) {
+                return Optional.of(Kind.String);
+            } else {
+                return Optional.empty();
+            }
+        }
+    }
+
 }
 

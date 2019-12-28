@@ -9,8 +9,8 @@ public abstract class StatefulModule extends Module {
 
     protected ModuleInfo info;
 
-    public StatefulModule(int keyCode) {
-        this.catalystKeyCode = keyCode;
+    public StatefulModule(int defaultKeyCode) {
+        this.catalystKeyCode = defaultKeyCode;
     }
 
     protected void onEnable() {
@@ -19,6 +19,10 @@ public abstract class StatefulModule extends Module {
 
     protected void onDisable() {
         StarfruitMod.getModuleManager().getBus().unsubscribe(this);
+    }
+
+    void setKeyCode(int newKeyCode) {
+        this.catalystKeyCode = newKeyCode;
     }
 
     Integer getKeyCode() {

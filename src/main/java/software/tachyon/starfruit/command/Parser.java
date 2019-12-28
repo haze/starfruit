@@ -1,8 +1,15 @@
 package software.tachyon.starfruit.command;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.Scanner;
+import java.util.StringJoiner;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import software.tachyon.starfruit.module.variable.Variable;
 
 public class Parser {
 
@@ -34,6 +41,9 @@ public class Parser {
         final Scanner scanner = new Scanner(input);
         final String moduleName = scanner.next();
         final String valueName = scanner.next();
+        final boolean nextArgIsCustomBool = scanner.hasNext(Variable.Bool.yesNo);
+        System.out.println(nextArgIsCustomBool);
+        System.out.println(scanner.hasNextBoolean());
         if (scanner.hasNextInt()) {
             int number = scanner.nextInt();
             scanner.close();
@@ -42,12 +52,16 @@ public class Parser {
             double number = scanner.nextDouble();
             scanner.close();
             return Optional.of(new SetVariable(moduleName, valueName, literal, number));
-        } else if (scanner.hasNextBoolean()) {
-            double flag = scanner.nextDouble();
+        } else if (scanner.hasNextBoolean() || nextArgIsCustomBool) {
+            final boolean flag;
+            if (nextArgIsCustomBool)
+                flag = (boolean) Variable.Bool.parse(scanner.next()).get();
+            else
+                flag = scanner.nextBoolean();
             scanner.close();
             return Optional.of(new SetVariable(moduleName, valueName, literal, flag));
         } else if (scanner.hasNext()) {
-            double text = scanner.nextDouble();
+            String text = scanner.next();
             scanner.close();
             return Optional.of(new SetVariable(moduleName, valueName, literal, text));
         } else {
