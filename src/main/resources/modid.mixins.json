@@ -12,7 +12,9 @@
     "entity.LivingEntityMixin",
     "client.KeyboardMixin",
     "world.DimensionMixin",
-    "network.ClientPlayNetworkHandlerMixin"
+    "network.ClientPlayNetworkHandlerMixin",
+    "network.EntityVelocityUpdateS2CPacketMixin",
+    "network.NetworkThreadUtilsMixin"
   ],
   "injectors": {
     "defaultRequire": 1
