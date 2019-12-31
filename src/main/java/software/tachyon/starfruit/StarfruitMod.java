@@ -70,29 +70,6 @@ public class StarfruitMod implements ModInitializer {
         System.out.println(consoleFormatted);
     }
 
-    final static float iridescenceSaturation = 0.4F;
-    final static float iridescenceBrightness = 1F;
-
-    public static Color getGlobalIridescence() {
-        final float hue = (System.currentTimeMillis() / 8) % 360;
-        return Color.getHSBColor(hue / 360, iridescenceSaturation, iridescenceBrightness);
-    }
-
-    public static void info(String format, Object... items) {
-        consoleInfo(format, items);
-
-        final String formatted = String.format("%cFFB972Starfruit%cr %s", HexShift.CATALYST_CHAR, COLOR_SEPARATOR,
-                String.format(format, items));
-
-        if (minecraft.inGameHud != null)
-            minecraft.inGameHud.addChatMessage(MessageType.SYSTEM, new LiteralText(formatted));
-    }
-
-    public static void consoleInfo(String format, Object... items) {
-        final String consoleFormatted = String.format("Starfruit:info %s", String.format(format, items)).trim();
-        System.out.println(consoleFormatted);
-    }
-
     // attemptDirectLogin tries to login given a minecraft account
     // specified in $HOME/.secret/minecraft for easy access to a session
     // during development

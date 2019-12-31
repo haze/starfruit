@@ -11,6 +11,7 @@ import software.tachyon.starfruit.module.event.KeyPressEvent;
 import software.tachyon.starfruit.module.event.SendPacketEvent;
 import software.tachyon.starfruit.module.movement.Flight;
 import software.tachyon.starfruit.module.movement.Sprint;
+import software.tachyon.starfruit.module.movement.Velocity;
 import software.tachyon.starfruit.module.render.Luminance;
 import software.tachyon.starfruit.module.render.ESP;
 import software.tachyon.starfruit.module.variable.Variable;
@@ -38,7 +39,6 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.Map;
 
 import org.lwjgl.glfw.GLFW;
 
@@ -91,6 +91,7 @@ public class ModuleManager {
         this.register(new Luminance(GLFW_KEY_B));
         this.register(new ESP(GLFW_KEY_J));
         this.register(new Flight(GLFW_KEY_K));
+        this.register(new Velocity(GLFW_KEY_V));
 
         try {
             this.readModuleSettings(this.saveFile);
@@ -206,35 +207,6 @@ public class ModuleManager {
         }
     }
 
-    public void registerVariables(StatefulModule mod) {
-        for (Field field : mod.getClass().getFields()) {
-            if (Variable.class.isAssignableFrom(field.getType())) {
-                final String variableName = field.getName();
-                Map<String, Variable<?>> varMap = this.variableCache.get(mod);
-                if (varMap == null) {
-                    varMap = new HashMap<>();
-                }
-                if (!varMap.containsKey(variableName)) {
-                    try {
-                        final Variable<?> variable = (Variable<?>) field.get(mod);
-                        variable.setFieldName(field.getName());
-                        varMap.put(field.getName().toLowerCase(), variable);
-                        StarfruitMod.consoleInfo("%s, %d\n", varMap.toString(), varMap.size());
-                        this.variableCache.put(mod, varMap);
-                    } catch (IllegalAccessException iae) {
-                        StarfruitMod.consoleInfo("Found variable with bad access (%s) in %s.\n", variableName,
-                                mod.getInfo().name);
-                    }
-                } else {
-                    StarfruitMod.consoleInfo("Found variable redefinition (%s) in %s.\n", variableName,
-                            mod.getInfo().name);
-                }
-
-                StarfruitMod.consoleInfo("Found %s variable %s!\n", mod.getInfo().name, field.getName());
-            }
-        }
-    }
-
     public void register(StatefulModule mod) {
         this.modules.put(mod.getKeyCode(), mod);
         this.moduleNameCache.put(mod.getInfo().name.toLowerCase(), mod);
@@ -300,11 +272,11 @@ public class ModuleManager {
             typedVar.set((Integer) result.value);
             output = typedVar.getDisplay();
         } else if (isDouble) {
-
-            System.out.println("adskfjasdkfkj");
             final Variable.Dbl typedVar = (Variable.Dbl) variable;
             oldValueDisplay = typedVar.getDisplay();
-            typedVar.set((Double) result.value);
+            final Double newValue = result.value instanceof Integer ? ((Integer) result.value).doubleValue()
+                    : (Double) result.value;
+            typedVar.set(newValue);
             output = typedVar.getDisplay();
         } else if (isBoolean) {
             final Variable.Bool typedVar = (Variable.Bool) variable;
