@@ -46,8 +46,6 @@ public abstract class Variable<T> {
         public static final Pattern yesNo = Pattern.compile(patternStr);
 
         public static Optional<Boolean> parse(String input) {
-            System.out.println("input = ");
-            System.out.println(input);
             for (String yes : yesPatterns)
                 if (input.equalsIgnoreCase(yes))
                     return Optional.of(true);

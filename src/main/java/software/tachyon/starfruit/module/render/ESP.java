@@ -115,7 +115,6 @@ public class ESP extends StatefulModule {
         GL11.glHint(GL11.GL_LINE_SMOOTH_HINT, GL11.GL_NICEST);
 
         final Color col = colorize(ent);
-        System.out.println(col);
         RenderSystem.color3f(col.getRed() / 255F, col.getGreen() / 255F, col.getBlue() / 255F);
 
         GL11.glBegin(GL11.GL_LINE_STRIP);
