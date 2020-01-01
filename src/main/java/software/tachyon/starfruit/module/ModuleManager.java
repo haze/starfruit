@@ -22,7 +22,8 @@ import software.tachyon.starfruit.command.Parser;
 
 import static org.lwjgl.glfw.GLFW.*;
 
-import java.io.BufferedOutputStream;
+import java.awt.Color;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -31,27 +32,23 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.Set;
 import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.lwjgl.glfw.GLFW;
-
 import java.util.Map;
 
-// TODO(haze): Remove hardcoded C8C8C8's
 // TODO(haze): Redesign 'setBind' to be more ergonomic (if need be)
 
 @Listener(references = References.Strong)
 public class ModuleManager {
 
     private MBassador<Event> bus = null;
-    private static ModuleManager INSTANCE = null;
 
     private Map<Integer, StatefulModule> modules = null;
     private SortedSet<StatefulModule> display = null;
@@ -63,24 +60,24 @@ public class ModuleManager {
 
     private ExecutorService threadPool = null;
 
+    int moduleNameComparator(StatefulModule a, StatefulModule b) {
+        final String an = a.getInfo().name;
+        final String bn = b.getInfo().name;
+        final double al = StarfruitMod.minecraft.textRenderer.getStringWidth(an);
+        final double bl = StarfruitMod.minecraft.textRenderer.getStringWidth(bn);
+        if (al == bl)
+            return an.compareTo(bn);
+        return Double.compare(bl, al);
+    }
+
     public ModuleManager(File settingsFile) {
         this.bus = new MBassador<Event>();
         this.commandParser = new Parser();
         this.saveFile = settingsFile;
 
-        this.modules = new HashMap<>();
+        this.modules = new ConcurrentHashMap<>();
 
-        this.display = new ConcurrentSkipListSet<>((StatefulModule a, StatefulModule b) -> {
-            if (a == b)
-                return 0;
-            final String an = a.getInfo().name;
-            final String bn = b.getInfo().name;
-            final int al = an.length();
-            final int bl = bn.length();
-            if (al == bl)
-                return an.compareTo(bn);
-            return ((Integer) bl).compareTo(al);
-        });
+        this.display = new ConcurrentSkipListSet<>((a, b) -> moduleNameComparator(a, b));
 
         this.moduleNameCache = new HashMap<>();
         this.variableCache = new HashMap<>();
@@ -101,7 +98,6 @@ public class ModuleManager {
             } catch (IOException ioe) {
                 ioe.printStackTrace();
             }
-            fnfe.printStackTrace();
         } catch (IOException ioe) {
             ioe.printStackTrace();
         }
@@ -115,7 +111,9 @@ public class ModuleManager {
     // ModuleName.variableName = setting
     void saveModuleSettings(File to) throws IOException {
         final Properties props = new Properties();
-        for (final StatefulModule mod : this.modules.values()) {
+        final Set<StatefulModule> sortedMods = new ConcurrentSkipListSet<>((a, b) -> moduleNameComparator(a, b));
+        sortedMods.addAll(this.modules.values());
+        for (final StatefulModule mod : sortedMods) {
             // save bind
             props.setProperty(String.format("%s.bind", mod.getInfo().name), mod.getKeyCode().toString());
             // for all registered variables, save them
@@ -144,13 +142,27 @@ public class ModuleManager {
         // only try and load what we've registered
         for (final StatefulModule mod : this.modules.values()) {
             // check for the binding
+            final String expectedBind = String.format("%s.bind", mod.getInfo().name);
+            Optional.ofNullable(props.get(expectedBind)).ifPresent(bindObj -> {
+                final String bind = (String) bindObj;
+                if (bind.equalsIgnoreCase("null"))
+                    mod.setKeyCode(null);
+                else {
+                    try {
+                        this.setBindWithoutSaving(mod, Integer.parseInt(bind));
+                    } catch (NumberFormatException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
             Optional.ofNullable(this.variableCache.get(mod)).ifPresent(vals -> {
                 for (final Variable<?> variable : vals.values()) {
-                    System.out.println(variable.getName().orElse("bruh moment cum"));
                     variable.getName().ifPresent(varName -> {
                         final String expectedKey = String.format("%s.%s", mod.getInfo().name, varName);
+                        System.out.printf("Expecting %s\n", expectedKey);
                         Optional.ofNullable(props.get(expectedKey)).ifPresent(val -> {
                             variable.getKind().ifPresent(kind -> {
+                                System.out.println(kind.toString());
                                 switch (kind) {
                                 case Boolean:
                                     ((Variable.Bool) variable).set(Boolean.parseBoolean((String) val));
@@ -217,9 +229,9 @@ public class ModuleManager {
     @Handler
     public void onKeyPress(KeyPressEvent event) {
         Optional.ofNullable(this.modules.get(event.getKeyPressed())).ifPresent((module) -> {
+            event.setCancelled(true);
             final boolean newState = !module.getState();
             module.setState(newState);
-
             if (newState) {
                 module.onEnable();
                 this.display.add(module);
@@ -231,8 +243,7 @@ public class ModuleManager {
     }
 
     boolean isInternalCommand(String input) {
-        final String lower = input.toLowerCase();
-        return lower.startsWith("set") || lower.startsWith(".");
+        return input.charAt(0) == '.';
     }
 
     public void changeModVariable(StatefulModule mod, Parser.SetVariable result) {
@@ -242,14 +253,10 @@ public class ModuleManager {
             return;
         }
         Variable<?> variable = null;
-        if (result.literal) {
-            variable = modVariableCache.get(result.valueName.toLowerCase());
-        } else {
-            for (Map.Entry<String, Variable<?>> entry : modVariableCache.entrySet()) {
-                if (entry.getKey().startsWith(result.valueName)) {
-                    variable = entry.getValue();
-                    break;
-                }
+        for (Map.Entry<String, Variable<?>> entry : modVariableCache.entrySet()) {
+            if (entry.getKey().startsWith(result.valueName)) {
+                variable = entry.getValue();
+                break;
             }
         }
         if (variable == null) {
@@ -293,11 +300,20 @@ public class ModuleManager {
             return;
         }
 
-        final String wasText = HexShift.colorizeLiteral(String.format("(was %s\u0666C8C8C8)", oldValueDisplay),
-                "C8C8C8");
-        final String varRef = HexShift.colorizeLiteral(variable.getName().orElse(result.valueName), "C8C8C8");
+        try {
+            this.saveModuleSettings(this.saveFile);
+        } catch (IOException e) {
+            StarfruitMod.info("Failed to save to file: %s", HexShift.colorizeLiteral(e.getMessage(), grayColor));
+        }
+
+        final String end = HexShift.colorizeLiteral(")", grayColor);
+        final String oldValue = HexShift.colorize(oldValueDisplay, Color.WHITE);
+        final String wasText = HexShift.colorizeLiteral(String.format("(was %s%s", oldValue, end), grayColor);
+        final String varRef = HexShift.colorizeLiteral(variable.getName().orElse(result.valueName), grayColor);
         StarfruitMod.info("%s %s is %s %s", mod.getInfo().hexDisplayString(), varRef, output, wasText);
     }
+
+    final String grayColor = "C8C8C8";
 
     @Handler
     @SuppressWarnings("unchecked")
@@ -308,53 +324,69 @@ public class ModuleManager {
             event.setCancelled(this.isInternalCommand(chatMessage));
             this.commandParser.parseSetCommand(chatMessage).ifPresent(result -> {
                 StatefulModule mod = null;
-                if (result.literal) {
-                    mod = this.moduleNameCache.get(result.moduleName);
-                } else {
-                    for (Map.Entry<String, StatefulModule> entry : this.moduleNameCache.entrySet()) {
-                        if (entry.getKey().startsWith(result.moduleName)) {
-                            mod = entry.getValue();
-                            break;
-                        }
+                for (Map.Entry<String, StatefulModule> entry : this.moduleNameCache.entrySet()) {
+                    if (entry.getKey().startsWith(result.moduleName)) {
+                        mod = entry.getValue();
+                        break;
                     }
                 }
+
                 if (mod == null) {
                     StarfruitMod.info("No module named %s found", result.moduleName);
                     return;
                 }
+
                 if (result.valueName.equalsIgnoreCase("bind")) {
                     final String key = result.value.toString().toUpperCase();
                     final Integer maybeKey = GLFWKeyMapping.KEY_MAP.get(key);
                     // TODO(haze): try and use optional
-                    final String newBind = HexShift.colorizeLiteral(key, "C8C8C8");
-                    if (maybeKey != null) {
-                        final Optional<StatefulModule> replaced = this.setBind(mod, maybeKey);
-                        final String replacementNotification = replaced.isPresent()
-                                ? String.format(" (unbound %s)", replaced.get().getInfo().hexDisplayString())
-                                : "";
-                        StarfruitMod.info("%s bind is now %s%s", mod.getInfo().hexDisplayString(), newBind,
-                                replacementNotification);
-                    } else {
-                        StarfruitMod.info("No key found for %s", newBind);
+                    final String newBind = HexShift.colorizeLiteral(key, grayColor);
+                    try {
+                        if (maybeKey != null) {
+                            final Optional<StatefulModule> replaced = this.setBindAndSave(mod, maybeKey);
+                            final String replacementNotification = replaced.isPresent()
+                                    ? String.format(" (unbound %s)", replaced.get().getInfo().hexDisplayString())
+                                    : "";
+                            StarfruitMod.info("%s bind is now %s%s", mod.getInfo().hexDisplayString(), newBind,
+                                    replacementNotification);
+                        } else {
+                            StarfruitMod.info("No key found for %s", newBind);
+                        }
+                    } catch (Throwable t) {
+                        t.printStackTrace();
                     }
                 } else {
                     changeModVariable(mod, result);
                 }
             });
         }
+
     }
 
-    public Optional<StatefulModule> setBind(StatefulModule mod, int newKey) {
+    public Optional<StatefulModule> setBindAndSave(StatefulModule mod, int newKey) {
+        return this.setBind(mod, newKey, true);
+    }
+
+    public Optional<StatefulModule> setBindWithoutSaving(StatefulModule mod, int newKey) {
+        return this.setBind(mod, newKey, false);
+    }
+
+    Optional<StatefulModule> setBind(StatefulModule mod, int newKey, boolean save) {
         this.modules.remove(mod.getKeyCode());
         final StatefulModule removed = this.modules.remove(newKey);
+        if (removed != null)
+            removed.setKeyCode(null);
         mod.setKeyCode(newKey);
         this.modules.put(newKey, mod);
-        try {
-            this.saveModuleSettings(this.saveFile);
-        } catch (Exception e) {
-            final String error = HexShift.colorizeLiteral(e.getMessage(), "C8C8C8");
-            StarfruitMod.info("Failed to save module settings file: %s", error);
-            e.printStackTrace();
+        if (save) {
+            try {
+                this.saveModuleSettings(this.saveFile);
+                System.out.println("Saved...");
+            } catch (Exception e) {
+                final String error = HexShift.colorizeLiteral(e.getMessage(), grayColor);
+                StarfruitMod.info("Failed to save module settings file: %s", error);
+                e.printStackTrace();
+            }
         }
         return Optional.ofNullable(removed);
     }
