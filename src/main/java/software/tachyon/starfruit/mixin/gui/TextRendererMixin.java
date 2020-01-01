@@ -38,10 +38,11 @@ public abstract class TextRendererMixin {
             int light);
 
     @Overwrite
-    public int getStringWidth(String text) {
-        if (text == null) {
+    public int getStringWidth(String ogText) {
+        if (ogText == null) {
             return 0;
         } else {
+            final String text = StarfruitMod.getFriends().normalizeString(ogText, false);
             float f = 0.0F;
             boolean bl = false;
 
@@ -72,8 +73,10 @@ public abstract class TextRendererMixin {
     }
 
     @Overwrite
-    private float drawLayer(String text, float x, float y, int color, boolean shadow, Matrix4f matrix,
+    private float drawLayer(String ogText, float x, float y, int color, boolean shadow, Matrix4f matrix,
             VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light) {
+
+        final String text = StarfruitMod.getFriends().normalizeString(ogText, true);
         float f = shadow ? 0.25F : 1.0F;
         float g = (float) (color >> 16 & 255) / 255.0F * f;
         float h = (float) (color >> 8 & 255) / 255.0F * f;

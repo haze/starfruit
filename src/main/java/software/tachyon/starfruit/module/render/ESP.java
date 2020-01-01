@@ -12,6 +12,8 @@ import net.engio.mbassy.listener.Handler;
 import net.engio.mbassy.listener.Listener;
 import net.engio.mbassy.listener.References;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.util.GlfwUtil;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.util.math.Vector3d;
 import net.minecraft.client.util.math.Vector3f;
@@ -27,7 +29,9 @@ import software.tachyon.starfruit.module.ModuleInfo;
 import software.tachyon.starfruit.module.StatefulModule;
 import software.tachyon.starfruit.module.ModuleInfo.Category;
 import software.tachyon.starfruit.module.event.gui.InGameHudDrawEvent;
+import software.tachyon.starfruit.module.event.gui.NametagRenderEvent;
 import software.tachyon.starfruit.module.variable.Variable;
+import software.tachyon.starfruit.utility.DrawUtility;
 import software.tachyon.starfruit.utility.ProjectionUtility;
 
 @Listener(references = References.Strong)
@@ -37,18 +41,31 @@ public class ESP extends StatefulModule {
   public final Variable.Bool players;
   public final Variable.Bool mobs;
   public final Variable.Bool animals;
+  public final Variable.Bool nametags;
+
+  public final Variable.Dbl nametagHue;
+  public final Variable.Dbl nametagSaturation;
+  public final Variable.Dbl nametagLuminance;
+  public final Variable.Dbl nametagAlpha;
 
   public final Variable.Dbl tracerWidth;
   public final Variable.Bool tracers;
 
   public ESP(int keyCode) {
     super(keyCode);
+
     this.info = ModuleInfo.init().name("ESP").category(Category.RENDER).build();
 
     this.items = new Variable.Bool(false);
     this.players = new Variable.Bool(true);
     this.mobs = new Variable.Bool(false);
     this.animals = new Variable.Bool(false);
+    this.nametags = new Variable.Bool(true);
+
+    this.nametagHue = new Variable.Dbl(0.0);
+    this.nametagSaturation = new Variable.Dbl(0.0);
+    this.nametagLuminance = new Variable.Dbl(0.25);
+    this.nametagAlpha = new Variable.Dbl(0.25);
 
     this.tracerWidth = new Variable.Dbl(1.3);
     this.tracers = new Variable.Bool(true);
@@ -94,20 +111,13 @@ public class ESP extends StatefulModule {
     return false;
   }
 
-  void drawTracer(InGameHudDrawEvent event, Entity ent) {
-    if (ent == StarfruitMod.minecraft.player)
-      return;
-    if (!shouldDraw(ent))
-      return;
-    final double x = MathHelper.lerp(event.getPartialTicks(), ent.lastRenderX, ent.getPos().getX());
-    final double y = MathHelper.lerp(event.getPartialTicks(), ent.lastRenderY, ent.getPos().getY());
-    final double z = MathHelper.lerp(event.getPartialTicks(), ent.lastRenderZ, ent.getPos().getZ());
-    final Vec3d interpolatedPos = new Vec3d(x, y, z);
+  void drawTracer(double interpX, double interpY, double interpZ, Entity ent) {
+    final Vec3d interpolatedPos = new Vec3d(interpX, interpY, interpZ);
     final Window window = StarfruitMod.minecraft.getWindow();
     try {
-      final Optional<Vector3f> feetScreenPos = ProjectionUtility.project(x, y, z, true);
-      final Optional<Vector3f> eyeScreenPos = ProjectionUtility.project(x, y + ent.getEyeHeight(ent.getPose()), z,
-          false);
+      final Optional<Vector3f> feetScreenPos = ProjectionUtility.project(interpX, interpY, interpZ, true);
+      final Optional<Vector3f> eyeScreenPos = ProjectionUtility.project(interpX,
+          interpY + ent.getEyeHeight(ent.getPose()), interpZ, false);
       feetScreenPos.ifPresent(pos -> {
         this.renderSetup();
 
@@ -151,12 +161,60 @@ public class ESP extends StatefulModule {
     }
   }
 
+  final double NAMETAG_X_PADDING = 2.5;
+  final double NAMETAG_Y_PADDING = 1.5;
+
+  void drawNameTag(double interpX, double interpY, double interpZ, Entity ent) {
+    // find screen position
+    ProjectionUtility.project(interpX, interpY + ent.getEyeHeight(ent.getPose()) + 0.6, interpZ, false)
+        .ifPresent(nametagPos -> {
+          // draw box
+          final String entName = ent.getName().asFormattedString();
+
+          double nameWidth = StarfruitMod.minecraft.textRenderer.getStringWidth(entName);
+          final double halfStrHeight = StarfruitMod.minecraft.textRenderer.fontHeight / 2.0;
+          final double yPadding = halfStrHeight + NAMETAG_Y_PADDING;
+          final double xPadding = (nameWidth / 2.0) + NAMETAG_X_PADDING;
+          final double boxLeft = nametagPos.getX() - xPadding;
+          final double boxRight = nametagPos.getX() + xPadding;
+          final double boxTop = nametagPos.getY() - yPadding;
+          final double boxBottom = nametagPos.getY() + yPadding;
+
+          DrawUtility.fill(boxLeft - 1, boxTop - 1, boxRight + 1, boxBottom + 1,
+              StarfruitMod.Colors.HSBA(this.nametagHue.get(), this.nametagSaturation.get(), this.nametagLuminance.get(),
+                  this.nametagAlpha.get()).getRGB());
+
+          DrawUtility.fill(boxLeft, boxTop, boxRight, boxBottom, StarfruitMod.Colors.HSBA(this.nametagHue.get(),
+              this.nametagSaturation.get(), this.nametagLuminance.get(), this.nametagAlpha.get() - 0.10).getRGB());
+
+          // draw text
+          DrawUtility.drawCenteredString(StarfruitMod.minecraft.textRenderer, entName, nametagPos.getX(),
+              nametagPos.getY() - halfStrHeight + 1, 0xFFFFFFFF);
+        });
+  }
+
+  @Handler
+  public <E extends Entity> void onNametagRender(NametagRenderEvent<E> event) {
+    if (!(event.getEntity() instanceof PlayerEntity))
+      return;
+    event.setCancelled(this.nametags.get());
+  }
+
   @Handler
   public void onScreenDraw(InGameHudDrawEvent event) {
     if (event.getState() == InGameHudDrawEvent.State.POST) {
       for (Entity ent : StarfruitMod.minecraft.world.getEntities()) {
+        if (ent == StarfruitMod.minecraft.player)
+          continue;
+        if (!shouldDraw(ent))
+          continue;
+        final double x = MathHelper.lerp(event.getPartialTicks(), ent.lastRenderX, ent.getPos().getX());
+        final double y = MathHelper.lerp(event.getPartialTicks(), ent.lastRenderY, ent.getPos().getY());
+        final double z = MathHelper.lerp(event.getPartialTicks(), ent.lastRenderZ, ent.getPos().getZ());
         if (this.tracers.get())
-          this.drawTracer(event, ent);
+          this.drawTracer(x, y, z, ent);
+        if (this.nametags.get())
+          this.drawNameTag(x, y, z, ent);
       }
     }
   }
