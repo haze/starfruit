@@ -11,11 +11,7 @@ import org.lwjgl.opengl.GL11;
 import net.engio.mbassy.listener.Handler;
 import net.engio.mbassy.listener.Listener;
 import net.engio.mbassy.listener.References;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.util.GlfwUtil;
 import net.minecraft.client.util.Window;
-import net.minecraft.client.util.math.Vector3d;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
@@ -41,7 +37,14 @@ public class ESP extends StatefulModule {
   public final Variable.Bool players;
   public final Variable.Bool mobs;
   public final Variable.Bool animals;
+
   public final Variable.Bool nametags;
+  public final Variable.Bool playerNametags;
+  public final Variable.Bool mobNametags;
+  public final Variable.Bool animalNametags;
+  public final Variable.Bool itemNametags;
+
+  public final Variable.Bool solidFriendTracer;
 
   public final Variable.Dbl nametagHue;
   public final Variable.Dbl nametagSaturation;
@@ -52,15 +55,20 @@ public class ESP extends StatefulModule {
   public final Variable.Bool tracers;
 
   public ESP(int keyCode) {
-    super(keyCode);
-
-    this.info = ModuleInfo.init().name("ESP").category(Category.RENDER).build();
+    super(keyCode, ModuleInfo.init().name("ESP").category(Category.RENDER).build());
 
     this.items = new Variable.Bool(false);
     this.players = new Variable.Bool(true);
     this.mobs = new Variable.Bool(false);
     this.animals = new Variable.Bool(false);
+
     this.nametags = new Variable.Bool(true);
+    this.playerNametags = new Variable.Bool(true);
+    this.mobNametags = new Variable.Bool(false);
+    this.animalNametags = new Variable.Bool(false);
+    this.itemNametags = new Variable.Bool(false);
+
+    this.solidFriendTracer = new Variable.Bool(true);
 
     this.nametagHue = new Variable.Dbl(0.0);
     this.nametagSaturation = new Variable.Dbl(0.0);
@@ -98,7 +106,7 @@ public class ESP extends StatefulModule {
     // return StarfruitMod.getGlobalIridescence();
   }
 
-  boolean shouldDraw(Entity ent) {
+  boolean shouldDrawTracer(Entity ent) {
     if (ent instanceof PlayerEntity && this.players.get())
       return true;
     if (ent instanceof AnimalEntity && this.animals.get())
@@ -106,6 +114,19 @@ public class ESP extends StatefulModule {
     if (ent instanceof MobEntity && this.mobs.get())
       return true;
     if (ent instanceof ItemEntity && this.items.get())
+      return true;
+
+    return false;
+  }
+
+  boolean shouldDrawNametag(Entity ent) {
+    if (ent instanceof PlayerEntity && this.playerNametags.get())
+      return true;
+    if (ent instanceof AnimalEntity && this.animalNametags.get())
+      return true;
+    if (ent instanceof MobEntity && this.mobNametags.get())
+      return true;
+    if (ent instanceof ItemEntity && this.itemNametags.get())
       return true;
 
     return false;
@@ -124,7 +145,12 @@ public class ESP extends StatefulModule {
         GL11.glEnable(GL11.GL_LINE_SMOOTH);
         GL11.glHint(GL11.GL_LINE_SMOOTH_HINT, GL11.GL_NICEST);
 
-        final Color col = colorize(ent);
+        final Color col;
+        if (this.solidFriendTracer.get() && StarfruitMod.getFriends().isFriend(ent.getUuid())) {
+          col = StarfruitMod.Friends.getFriendColor();
+        } else {
+          col = colorize(ent);
+        }
         RenderSystem.color3f(col.getRed() / 255F, col.getGreen() / 255F, col.getBlue() / 255F);
 
         GL11.glBegin(GL11.GL_LINE_STRIP);
@@ -206,14 +232,12 @@ public class ESP extends StatefulModule {
       for (Entity ent : StarfruitMod.minecraft.world.getEntities()) {
         if (ent == StarfruitMod.minecraft.player)
           continue;
-        if (!shouldDraw(ent))
-          continue;
         final double x = MathHelper.lerp(event.getPartialTicks(), ent.lastRenderX, ent.getPos().getX());
         final double y = MathHelper.lerp(event.getPartialTicks(), ent.lastRenderY, ent.getPos().getY());
         final double z = MathHelper.lerp(event.getPartialTicks(), ent.lastRenderZ, ent.getPos().getZ());
-        if (this.tracers.get())
+        if (this.tracers.get() && shouldDrawTracer(ent))
           this.drawTracer(x, y, z, ent);
-        if (this.nametags.get())
+        if (this.nametags.get() && shouldDrawNametag(ent))
           this.drawNameTag(x, y, z, ent);
       }
     }

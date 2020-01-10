@@ -9,39 +9,39 @@ import java.util.StringJoiner;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
+import software.tachyon.starfruit.module.ModuleManager;
 import software.tachyon.starfruit.module.variable.Variable;
 
 public class Parser {
 
     public class Result {
-        public final String command, selector;
+        public final String command;
+        public final Optional<String> selector;
         public final Optional<Object> value;
 
         protected Result(String command, String selector, Object value) {
             this.command = command;
-            this.selector = selector;
+            this.selector = Optional.ofNullable(selector);
             this.value = Optional.ofNullable(value);
         }
 
         @Override
         public String toString() {
-            return String.format("cmd=%s, sel=%s, val=%s", this.command, this.selector,
-                    this.value.isPresent() ? this.value.toString() : "empty");
+            return String.format("cmd=%s, sel=%s, val=%s", this.command, this.selector, this.value);
         }
     }
 
     public Optional<Result> parseSetCommand(String input) {
-        // TODO(haze): reduce complexity, simplify to one check
-        if (input.charAt(0) != '.')
+        if (!ModuleManager.isInternalCommand(input))
             return Optional.empty();
         return this.parse(input.substring(1));
     }
 
     Optional<Result> parse(String input) {
         final Scanner scanner = new Scanner(input);
+        String command = null;
         try {
-            final String command = scanner.next();
+            command = scanner.next();
             final String selector = scanner.next();
             final boolean nextArgIsCustomBool = scanner.hasNext(Variable.Bool.yesNo);
             if (scanner.hasNextInt()) {
@@ -69,6 +69,9 @@ public class Parser {
                 return Optional.of(new Result(command, selector, null));
             }
         } catch (NoSuchElementException ne) {
+            if (command != null) {
+                return Optional.of(new Result(command, null, null));
+            }
             return Optional.empty();
         }
     }

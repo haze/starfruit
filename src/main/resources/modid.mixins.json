@@ -6,6 +6,8 @@
   "client": [
     "client.MinecraftClientMixin",
     "client.MinecraftClientInterfaceMixin",
+    "client.PlayerInventoryMixin",
+    "client.AbstractClientPlayerEntityMixin",
     "gui.BossBarHudMixin",
     "gui.BossBarHudMixinInterface",
     "gui.ChatScreenInterfaceMixin",
@@ -21,7 +23,10 @@
     "world.WorldRendererMixin",
     "network.ClientPlayNetworkHandlerMixin",
     "network.EntityVelocityUpdateS2CPacketMixin",
-    "network.NetworkThreadUtilsMixin"
+    "network.NetworkThreadUtilsMixin",
+    "network.InventoryS2CPacketMixin",
+    "network.PlayerMoveC2SPacketMixin",
+    "network.GuiSlotUpdateS2CPacketMixin"
   ],
   "injectors": {
     "defaultRequire": 1

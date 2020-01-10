@@ -6,13 +6,17 @@ import software.tachyon.starfruit.module.event.api.CancellableEvent;
 
 public class SendPacketEvent<T extends PacketListener> extends CancellableEvent {
 
-    private final Packet<T> packet;
+    private Packet<T> packet;
 
     public SendPacketEvent(Packet<T> packet) {
-        this.packet = packet;
+        this.setPacket(packet);
     }
 
     public Packet<T> getPacket() {
         return this.packet;
+    }
+
+    public void setPacket(Packet<T> packet) {
+        this.packet = packet;
     }
 }

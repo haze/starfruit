@@ -14,8 +14,7 @@ import net.engio.mbassy.listener.References;
 public class Sprint extends StatefulModule {
 
   public Sprint(int keyCode) {
-    super(keyCode);
-    this.info = new ModuleInfo.Builder().name("Sprint").category(Category.MOVEMENT).build();
+    super(keyCode, ModuleInfo.init().name("Sprint").category(Category.MOVEMENT).build());
   }
 
   @Override

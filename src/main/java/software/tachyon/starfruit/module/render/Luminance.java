@@ -107,8 +107,7 @@ public class Luminance extends StatefulModule {
     public final Variable.Int fadeTime;
 
     public Luminance(int keyCode) {
-        super(keyCode);
-        this.info = new ModuleInfo.Builder().name("Luminance").category(Category.MOVEMENT).build();
+        super(keyCode, ModuleInfo.init().name("Luminance").category(Category.MOVEMENT).build());
         this.fadeTime = new Variable.Int(1000);
         this.adjustLuminanceTask = new AdjustLuminanceTask(this.fadeTime);
     }

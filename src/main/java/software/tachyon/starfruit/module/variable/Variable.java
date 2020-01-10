@@ -35,14 +35,20 @@ public abstract class Variable<T> {
     }
 
     public static class Bool extends Variable<Boolean> {
-        public String getDisplay() {
-            return this.get() ? StarfruitMod.Colors.colorize("on", 'a') : StarfruitMod.Colors.colorize("off", 'c');
+        public static String displayGiven(Boolean state) {
+            return state ? StarfruitMod.Colors.colorize("on", 'a')
+                    : StarfruitMod.Colors.colorize("off", 'c');
         }
 
-        static final String[] yesPatterns = new String[] { "y", "yes", "on", };
-        static final String[] noPatterns = new String[] { "n", "no", "off", "nil" };
-        public static final String patternStr = Streams.concat(Arrays.stream(yesPatterns), Arrays.stream(noPatterns))
-                .collect(Collectors.joining("|"));
+        public String getDisplay() {
+            return Bool.displayGiven(this.get());
+        }
+
+        static final String[] yesPatterns = new String[] {"y", "yes", "on",};
+        static final String[] noPatterns = new String[] {"n", "no", "off", "nil"};
+        public static final String patternStr =
+                Streams.concat(Arrays.stream(yesPatterns), Arrays.stream(noPatterns))
+                        .collect(Collectors.joining("|"));
         public static final Pattern yesNo = Pattern.compile(patternStr);
 
         public static Optional<Boolean> parse(String input) {

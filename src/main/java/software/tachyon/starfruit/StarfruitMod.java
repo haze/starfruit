@@ -6,6 +6,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Scanner;
 import java.util.UUID;
+
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -104,15 +107,26 @@ public class StarfruitMod implements ModInitializer {
       return this.friends.containsKey(uuid);
     }
 
-    final String friendColorLiteral = "32ffb9";
+    // public final static String friendColorLiteral = "32ffb9";
+
+    // static Color friendColor = null;
+    public static Color getFriendColor() {
+      return StarfruitMod.getGlobalIridescence();
+      // if (Friends.friendColor == null)
+      // Friends.friendColor = new Color(50, 255, 185);
+      // return Friends.friendColor;
+    }
+    // wtf java fucking garbage language
+    // public final static Color friendColor = new Color(50, 255, 185);
 
     public String normalizeString(String source, boolean colorize) {
       String buf = source;
       for (final Map.Entry<UUID, FriendInformation> ent : this.friends.entrySet()) {
-        if (buf.contains(ent.getValue().username)) {
-          final String alias = colorize ? HexShift.colorizeLiteral(ent.getValue().alias, friendColorLiteral)
-              : ent.getValue().alias;
-          buf = buf.replaceAll(ent.getValue().username, alias);
+        if (StringUtils.containsIgnoreCase(buf, ent.getValue().username)) {
+          final String alias =
+              colorize ? HexShift.colorize(ent.getValue().alias, Friends.getFriendColor())
+                  : ent.getValue().alias;
+          buf = buf.replaceAll("(?i)" + ent.getValue().username, alias);
         }
       }
       return buf;
@@ -138,6 +152,7 @@ public class StarfruitMod implements ModInitializer {
     static float MODULE_LUM = 0.9F;
 
     public static Color moduleColor(float hue) {
+      System.out.printf("Interpolating color %f\n", hue);
       return Color.getHSBColor(hue, MODULE_SAT, MODULE_LUM);
     }
 
@@ -158,9 +173,10 @@ public class StarfruitMod implements ModInitializer {
   }
 
   public final static String DISPLAY_NAME = "Starfruit";
-  private final static File FOLDER = Paths.get(System.getProperty("user.home"), ".starfruit").toFile();
-  private final static File DEV_ACCOUNT_FILE = Paths.get(System.getProperty("user.home"), ".secret/.minecraft")
-      .toFile();
+  public final static File FOLDER =
+      Paths.get(System.getProperty("user.home"), ".starfruit").toFile();
+  private final static File DEV_ACCOUNT_FILE =
+      Paths.get(System.getProperty("user.home"), ".secret/.minecraft").toFile();
 
   private final static File FRIENDS_FILE = new File(FOLDER, "friend.properties");
   private final static File MODULE_SETTINGS_FILE = new File(FOLDER, "module.properties");
@@ -178,15 +194,16 @@ public class StarfruitMod implements ModInitializer {
   public static void info(String format, Object... items) {
     consoleInfo(format, items);
 
-    final String formatted = String.format("%cFFB972Starfruit%cr %s", HexShift.CATALYST_CHAR, COLOR_SEPARATOR,
-        String.format(format, items));
+    final String formatted = String.format("%cFFB972Starfruit%cr %s", HexShift.CATALYST_CHAR,
+        COLOR_SEPARATOR, String.format(format, items));
 
     if (minecraft.inGameHud != null)
       minecraft.inGameHud.addChatMessage(MessageType.SYSTEM, new LiteralText(formatted));
   }
 
   public static void consoleInfo(String format, Object... items) {
-    final String consoleFormatted = String.format("Starfruit:info %s", String.format(format, items)).trim();
+    final String consoleFormatted =
+        String.format("Starfruit:info %s", String.format(format, items)).trim();
     System.out.println(consoleFormatted);
   }
 
@@ -200,7 +217,8 @@ public class StarfruitMod implements ModInitializer {
         final String email = scanner.nextLine();
         final String password = scanner.nextLine();
         scanner.close();
-        ((MinecraftClientInterfaceMixin) minecraft).setSession(AccountUtil.createSession(email, password));
+        ((MinecraftClientInterfaceMixin) minecraft)
+            .setSession(AccountUtil.createSession(email, password));
       } catch (Exception ignored) {
       }
     }

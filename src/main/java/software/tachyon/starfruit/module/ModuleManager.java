@@ -16,9 +16,13 @@ import software.tachyon.starfruit.module.event.GameJoinEvent;
 import software.tachyon.starfruit.module.event.KeyPressEvent;
 import software.tachyon.starfruit.module.event.SendPacketEvent;
 import software.tachyon.starfruit.module.movement.Flight;
+import software.tachyon.starfruit.module.movement.NoFall;
 import software.tachyon.starfruit.module.movement.Sprint;
 import software.tachyon.starfruit.module.movement.Velocity;
+import software.tachyon.starfruit.module.network.PacketLogger;
 import software.tachyon.starfruit.module.render.Luminance;
+import software.tachyon.starfruit.module.utility.AutoArmor;
+import software.tachyon.starfruit.module.render.Camera;
 import software.tachyon.starfruit.module.render.ESP;
 import software.tachyon.starfruit.module.variable.Variable;
 import software.tachyon.starfruit.utility.DrawUtility;
@@ -40,8 +44,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
+
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -63,15 +66,16 @@ import me.xdrop.fuzzywuzzy.model.ExtractedResult;
 import java.util.Map;
 
 // TODO(haze): Redesign 'setBind' to be more ergonomic (if need be)
-// TODO(haze): KillAura, BlockESP, NoFall, Freecam, FastPlace, AutoRespawn, Speedmine, AutoArmor,
-// TODO(haze): Sneak, Step,
+// TODO(haze): KillAura, BlockESP, FastPlace, AutoRespawn, Speedmine, AutoArmor,
+// TODO(haze): Sneak, Step, Speed,
 
 @Listener(references = References.Strong)
 public class ModuleManager {
 
     private MBassador<Event> bus = null;
 
-    private Map<Integer, StatefulModule> modules = null;
+    private Set<StatefulModule> modules = null;
+    private Map<Integer, StatefulModule> toggleModules = null;
 
     private SortedSet<StatefulModule> display = null;
     private Map<String, StatefulModule> moduleNameCache = null;
@@ -80,6 +84,9 @@ public class ModuleManager {
     // for fuzzy search
     private Set<String> moduleNames = null;
     private Map<StatefulModule, Set<String>> moduleVariableNameCache = null;
+
+
+    private Map<Class<? extends StatefulModule>, StatefulModule> moduleClassCache = null;
 
     private final Parser commandParser;
     private final File saveFile;
@@ -103,7 +110,9 @@ public class ModuleManager {
         this.commandParser = new Parser();
         this.saveFile = settingsFile;
 
-        this.modules = new ConcurrentHashMap<>();
+        this.toggleModules = new ConcurrentHashMap<>();
+        this.modules = new HashSet<>();
+
         this.moduleNames = new HashSet<>();
         this.moduleVariableNameCache = new HashMap<>();
 
@@ -111,6 +120,8 @@ public class ModuleManager {
 
         this.moduleNameCache = new HashMap<>();
         this.variableCache = new HashMap<>();
+        this.moduleClassCache = new HashMap<>();
+
         this.threadPool = Executors.newCachedThreadPool();
 
         this.toEnableOnceWorldLoads = new LinkedList<>();
@@ -118,7 +129,7 @@ public class ModuleManager {
         this.bus.subscribe(this);
         this.registerDefaultModules();
 
-        for (final StatefulModule mod : this.modules.values()) {
+        for (final StatefulModule mod : this.modules) {
             this.moduleNames.add(mod.getInfo().name);
             final Set<String> varNameCache = new HashSet<>();
             Optional.ofNullable(this.variableCache.get(mod)).ifPresent(vars -> {
@@ -150,6 +161,10 @@ public class ModuleManager {
         this.register(new ESP(GLFW_KEY_J));
         this.register(new Flight(GLFW_KEY_K));
         this.register(new Velocity(GLFW_KEY_V));
+        this.register(new Camera(GLFW_KEY_M));
+        this.register(new AutoArmor(null));
+        this.register(new PacketLogger(null));
+        this.register(new NoFall(null));
     }
 
     public void save() throws IOException {
@@ -168,13 +183,12 @@ public class ModuleManager {
     // ModuleName.variableName = setting
     void saveModuleSettings(File to) throws IOException {
         final Properties props = new Properties();
-        final Set<StatefulModule> sortedMods = new ConcurrentSkipListSet<>((a, b) -> moduleNameComparator(a, b));
-        sortedMods.addAll(this.modules.values());
-        for (final StatefulModule mod : sortedMods) {
+        for (final StatefulModule mod : this.modules) {
             // save bind
-            props.setProperty(String.format("%s.bind", mod.getInfo().name), mod.getKeyCode().toString());
+            props.setProperty(String.format("%s.bind", mod.getInfo().name), mod.getKeyCodeString());
             // save state
-            props.setProperty(String.format("%s.state", mod.getInfo().name), Boolean.toString(mod.getState()));
+            props.setProperty(String.format("%s.state", mod.getInfo().name),
+                    Boolean.toString(mod.getState()));
             // for all registered variables, save them
             Optional.ofNullable(this.variableCache.get(mod)).ifPresent(vals -> {
                 for (final Variable<?> variable : vals.values()) {
@@ -199,7 +213,7 @@ public class ModuleManager {
         final Properties props = new Properties();
         props.load(new FileInputStream(from));
         // only try and load what we've registered
-        for (final StatefulModule mod : this.modules.values()) {
+        for (final StatefulModule mod : this.modules) {
             // check for the binding
             final String expectedBind = String.format("%s.bind", mod.getInfo().name);
             Optional.ofNullable(props.get(expectedBind)).ifPresent(bindObj -> {
@@ -226,22 +240,26 @@ public class ModuleManager {
             Optional.ofNullable(this.variableCache.get(mod)).ifPresent(vals -> {
                 for (final Variable<?> variable : vals.values()) {
                     variable.getName().ifPresent(varName -> {
-                        final String expectedKey = String.format("%s.%s", mod.getInfo().name, varName);
+                        final String expectedKey =
+                                String.format("%s.%s", mod.getInfo().name, varName);
                         Optional.ofNullable(props.get(expectedKey)).ifPresent(val -> {
                             variable.getKind().ifPresent(kind -> {
                                 switch (kind) {
-                                case Boolean:
-                                    ((Variable.Bool) variable).set(Boolean.parseBoolean((String) val));
-                                    break;
-                                case Double:
-                                    ((Variable.Dbl) variable).set(Double.parseDouble((String) val));
-                                    break;
-                                case Integer:
-                                    ((Variable.Int) variable).set(Integer.parseInt((String) val));
-                                    break;
-                                case String:
-                                    ((Variable.Str) variable).set((String) val);
-                                    break;
+                                    case Boolean:
+                                        ((Variable.Bool) variable)
+                                                .set(Boolean.parseBoolean((String) val));
+                                        break;
+                                    case Double:
+                                        ((Variable.Dbl) variable)
+                                                .set(Double.parseDouble((String) val));
+                                        break;
+                                    case Integer:
+                                        ((Variable.Int) variable)
+                                                .set(Integer.parseInt((String) val));
+                                        break;
+                                    case String:
+                                        ((Variable.Str) variable).set((String) val);
+                                        break;
                                 }
                             });
                         });
@@ -270,22 +288,26 @@ public class ModuleManager {
                         StarfruitMod.consoleInfo("%s: %d\n", mod.getInfo().name, varMap.size());
                         this.variableCache.put(mod, varMap);
                     } catch (IllegalAccessException iae) {
-                        StarfruitMod.consoleInfo("Found variable with bad access (%s) in %s.\n", variableName,
-                                mod.getInfo().name);
+                        StarfruitMod.consoleInfo("Found variable with bad access (%s) in %s.\n",
+                                variableName, mod.getInfo().name);
                     }
                 } else {
-                    StarfruitMod.consoleInfo("Found variable redefinition (%s) in %s.\n", variableName,
-                            mod.getInfo().name);
+                    StarfruitMod.consoleInfo("Found variable redefinition (%s) in %s.\n",
+                            variableName, mod.getInfo().name);
                 }
 
-                StarfruitMod.consoleInfo("Found %s variable %s!\n", mod.getInfo().name, field.getName());
+                StarfruitMod.consoleInfo("Found %s variable %s!\n", mod.getInfo().name,
+                        field.getName());
             }
         }
     }
 
     public void register(StatefulModule mod) {
-        this.modules.put(mod.getKeyCode(), mod);
+        this.modules.add(mod);
+        if (mod.getKeyCode() != null)
+            this.toggleModules.put(mod.getKeyCode(), mod);
         this.moduleNameCache.put(mod.getInfo().name.toLowerCase(), mod);
+        this.moduleClassCache.put(mod.getClass(), mod);
         // register variables
         this.registerVariables(mod);
     }
@@ -300,7 +322,7 @@ public class ModuleManager {
 
     @Handler
     public void onKeyPress(KeyPressEvent event) {
-        Optional.ofNullable(this.modules.get(event.getKeyPressed())).ifPresent((module) -> {
+        Optional.ofNullable(this.toggleModules.get(event.getKeyPressed())).ifPresent((module) -> {
             event.setCancelled(true);
             final boolean newState = !module.getState();
             this.setModuleState(module, newState, true);
@@ -318,91 +340,114 @@ public class ModuleManager {
         }
         if (newState) {
             module.onEnable();
-            this.display.add(module);
+            if (!module.getInfo().isHidden())
+                this.display.add(module);
         } else {
-            this.display.remove(module);
+            if (!module.getInfo().isHidden())
+                this.display.remove(module);
             module.onDisable();
         }
     }
 
-    boolean isInternalCommand(String input) {
+    public static boolean isInternalCommand(String input) {
         return input.charAt(0) == '.';
     }
 
     public void changeModVariable(StatefulModule mod, Parser.Result result) {
-        final Map<String, Variable<?>> modVariableCache = this.variableCache.get(mod);
-        if (modVariableCache == null) {
-            StarfruitMod.info("%s has no configurable variables", mod.getInfo().hexDisplayString());
-            return;
-        }
-        Variable<?> variable = null;
-        final List<ExtractedResult> fuzzedVariables = this.fuzzySearchVariables(mod, result.selector);
-        if (fuzzedVariables.size() > 0) {
-            if (fuzzedVariables.get(0).getString().equalsIgnoreCase("bind")) { // check for special bind case
-                this.onBindCommand(mod, result);
-                return;
-            } else {
-                variable = this.variableCache.get(mod).get(fuzzedVariables.get(0).getString().toLowerCase());
-            }
-        }
-
-        if (variable == null) {
-            StarfruitMod.info("%s does not have variable %s", mod.getInfo().hexDisplayString(), result.selector);
-            return;
-        }
-
-        final Class<?> variableType = (Class<?>) ((ParameterizedType) variable.getClass().getGenericSuperclass())
-                .getActualTypeArguments()[0];
-        final boolean isInt = variableType.isAssignableFrom(Integer.class);
-        final boolean isDouble = variableType.isAssignableFrom(Double.class);
-        final boolean isBoolean = variableType.isAssignableFrom(Boolean.class);
-        final boolean isString = variableType.isAssignableFrom(String.class);
-
-        final String output, oldValueDisplay;
-
-        if (!result.value.isPresent()) {
-            StarfruitMod.info("No value provided");
-            return;
-        } else {
-            final Object value = result.value.get();
-            if (isInt) {
-                final Variable.Int typedVar = (Variable.Int) variable;
-                oldValueDisplay = typedVar.getDisplay();
-                typedVar.set((Integer) value);
-                output = typedVar.getDisplay();
-            } else if (isDouble) {
-                final Variable.Dbl typedVar = (Variable.Dbl) variable;
-                oldValueDisplay = typedVar.getDisplay();
-                final Double newValue = value instanceof Integer ? ((Integer) value).doubleValue() : (Double) value;
-                typedVar.set(newValue);
-                output = typedVar.getDisplay();
-            } else if (isBoolean) {
-                final Variable.Bool typedVar = (Variable.Bool) variable;
-                oldValueDisplay = typedVar.getDisplay();
-                typedVar.set((Boolean) value);
-                output = typedVar.getDisplay();
-            } else if (isString) {
-                final Variable.Str typedVar = (Variable.Str) variable;
-                oldValueDisplay = typedVar.getDisplay();
-                typedVar.set((String) value);
-                output = typedVar.getDisplay();
-            } else {
-                StarfruitMod.info("\"%s\" could not be parsed as a proper value", result.value);
-                return;
-            }
-        }
-
         try {
-            this.saveModuleSettings(this.saveFile);
-        } catch (IOException e) {
-            StarfruitMod.info("Failed to save to file: %s", HexShift.colorizeLiteral(e.getMessage(), grayColor));
-        }
+            final Map<String, Variable<?>> modVariableCache = this.variableCache.get(mod);
+            Variable<?> variable = null;
+            if (!result.selector.isPresent()) {
+                StarfruitMod.info("No variable name provided");
+                return;
+            }
+            final List<ExtractedResult> fuzzedVariables =
+                    this.fuzzySearchVariables(mod, result.selector.get());
+            if (fuzzedVariables.size() > 0) {
+                if (fuzzedVariables.get(0).getString().equalsIgnoreCase("bind")) {
+                    this.onBindCommand(mod, result);
+                    return;
+                } else {
+                    if (modVariableCache == null) {
+                        StarfruitMod.info("%s has no configurable variables",
+                                mod.getInfo().hexDisplayString());
+                        return;
+                    }
+                    variable =
+                            modVariableCache.get(fuzzedVariables.get(0).getString().toLowerCase());
+                }
+            }
 
-        final String end = HexShift.colorizeLiteral(")", grayColor);
-        final String oldValue = HexShift.colorize(oldValueDisplay, Color.WHITE);
-        final String wasText = HexShift.colorizeLiteral(String.format("(was %s%s", oldValue, end), grayColor);
-        final String varRef = HexShift.colorizeLiteral(variable.getName().orElse(result.selector), grayColor);
-        StarfruitMod.info("%s %s is %s %s", mod.getInfo().hexDisplayString(), varRef, output, wasText);
+            if (variable == null) {
+                StarfruitMod.info("%s does not have variable %s", mod.getInfo().hexDisplayString(),
+                        result.selector.get());
+                return;
+            }
+
+            final Class<?> variableType =
+                    (Class<?>) ((ParameterizedType) variable.getClass().getGenericSuperclass())
+                            .getActualTypeArguments()[0];
+            final boolean isInt = variableType.isAssignableFrom(Integer.class);
+            final boolean isDouble = variableType.isAssignableFrom(Double.class);
+            final boolean isBoolean = variableType.isAssignableFrom(Boolean.class);
+            final boolean isString = variableType.isAssignableFrom(String.class);
+
+            final String output, oldValueDisplay;
+
+            final String varRef = HexShift.colorizeLiteral(
+                    variable.getName().orElse(result.selector.orElse("???")), grayColor);
+
+            if (!result.value.isPresent()) {
+                StarfruitMod.info("%s %s is %s", mod.getInfo().hexDisplayString(), varRef,
+                        variable.getDisplay());
+                return;
+            } else {
+                final Object value = result.value.get();
+                if (isInt) {
+                    final Variable.Int typedVar = (Variable.Int) variable;
+                    oldValueDisplay = typedVar.getDisplay();
+                    typedVar.set((Integer) value);
+                    output = typedVar.getDisplay();
+                } else if (isDouble) {
+                    final Variable.Dbl typedVar = (Variable.Dbl) variable;
+                    oldValueDisplay = typedVar.getDisplay();
+                    final Double newValue =
+                            value instanceof Integer ? ((Integer) value).doubleValue()
+                                    : (Double) value;
+                    typedVar.set(newValue);
+                    output = typedVar.getDisplay();
+                } else if (isBoolean) {
+                    final Variable.Bool typedVar = (Variable.Bool) variable;
+                    oldValueDisplay = typedVar.getDisplay();
+                    typedVar.set((Boolean) value);
+                    output = typedVar.getDisplay();
+                } else if (isString) {
+                    final Variable.Str typedVar = (Variable.Str) variable;
+                    oldValueDisplay = typedVar.getDisplay();
+                    typedVar.set((String) value);
+                    output = typedVar.getDisplay();
+                } else {
+                    StarfruitMod.info("\"%s\" could not be parsed as a proper value", result.value);
+                    return;
+                }
+            }
+
+            try {
+                this.saveModuleSettings(this.saveFile);
+            } catch (IOException e) {
+                StarfruitMod.info("Failed to save to file: %s",
+                        HexShift.colorizeLiteral(e.getMessage(), grayColor));
+            }
+
+            final String end = HexShift.colorizeLiteral(")", grayColor);
+            final String oldValue = HexShift.colorize(oldValueDisplay, Color.WHITE);
+            final String wasText =
+                    HexShift.colorizeLiteral(String.format("(was %s%s", oldValue, end), grayColor);
+            StarfruitMod.info("%s %s is %s %s", mod.getInfo().hexDisplayString(), varRef, output,
+                    wasText);
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
     }
 
     final String grayColor = "C8C8C8";
@@ -413,8 +458,9 @@ public class ModuleManager {
         if (event.getPacket() instanceof ChatMessageC2SPacket) {
             final ChatMessageC2SPacket packet = (ChatMessageC2SPacket) event.getPacket();
             final String chatMessage = packet.getChatMessage();
-            event.setCancelled(this.isInternalCommand(chatMessage));
+            event.setCancelled(ModuleManager.isInternalCommand(chatMessage));
             this.commandParser.parseSetCommand(chatMessage).ifPresent(result -> {
+                System.out.println(result);
                 if (result.command.equalsIgnoreCase("friend")) {
                     onFriendCommand(result);
                     return;
@@ -430,8 +476,15 @@ public class ModuleManager {
                     return;
                 }
 
-                if (result.selector.equalsIgnoreCase("bind")) {
+                final boolean selectorIsPresent = result.selector.isPresent();
+                if (selectorIsPresent && result.selector.get().equalsIgnoreCase("bind")) {
                     onBindCommand(mod, result);
+                } else if (!selectorIsPresent) {
+                    System.out.println("cusdfkasdfj");
+                    this.setModuleState(mod, !mod.getState(), true);
+                    if (mod.getInfo().isHidden())
+                        StarfruitMod.info("%s is %s", mod.getInfo().hexDisplayString(),
+                                Variable.Bool.displayGiven(mod.getState()));
                 } else {
                     changeModVariable(mod, result);
                 }
@@ -444,7 +497,11 @@ public class ModuleManager {
     // .friend Jordin jordin -- toggle w/ alias
     // .friend Jordin -- toggle
     void onFriendCommand(Parser.Result result) {
-        final String username = result.selector;
+        if (!result.selector.isPresent()) {
+            StarfruitMod.info("No username provided");
+            return;
+        }
+        final String username = result.selector.get();
         final String alias = (String) result.value.orElse(username);
         final Optional<PlayerListEntry> optionalPlayer = this.lookupUser(username);
         if (!optionalPlayer.isPresent()) {
@@ -488,9 +545,11 @@ public class ModuleManager {
         try {
             if (maybeKey != null) {
                 final Optional<StatefulModule> replaced = this.setBindAndSave(mod, maybeKey);
-                final String replacementNotification = replaced.isPresent()
-                        ? String.format(" (unbound %s)", replaced.get().getInfo().hexDisplayString())
-                        : "";
+                final String replacementNotification =
+                        replaced.isPresent()
+                                ? String.format(" (unbound %s)",
+                                        replaced.get().getInfo().hexDisplayString())
+                                : "";
                 StarfruitMod.info("%s bind is now %s%s", mod.getInfo().hexDisplayString(), newBind,
                         replacementNotification);
             } else {
@@ -511,13 +570,13 @@ public class ModuleManager {
     }
 
     Optional<StatefulModule> setBind(StatefulModule mod, int newKey, boolean save) {
-        if (this.modules.containsKey(mod.getKeyCode()))
-            this.modules.remove(mod.getKeyCode());
-        final StatefulModule removed = this.modules.remove(newKey);
+        if (this.toggleModules.containsKey(mod.getKeyCode()))
+            this.toggleModules.remove(mod.getKeyCode());
+        final StatefulModule removed = this.toggleModules.remove(newKey);
         if (removed != null)
             removed.setKeyCode(null);
         mod.setKeyCode(newKey);
-        this.modules.put(newKey, mod);
+        this.toggleModules.put(newKey, mod);
         if (save) {
             try {
                 this.saveModuleSettings(this.saveFile);
@@ -545,6 +604,24 @@ public class ModuleManager {
 
     // Fuzzy Shit (+ Hints)
 
+    final String[] disallowedCommands = new String[] {"friend"};
+
+    boolean doesCommandNotRequireSuggestion(String inputPart) {
+        for (final String check : this.disallowedCommands)
+            if (inputPart.equalsIgnoreCase(check))
+                return true;
+        return false;
+    }
+
+    final String[] disallowedSelectors = new String[] {"bind"};
+
+    boolean doesSelectorNotRequireSuggestion(String inputPart) {
+        for (final String check : this.disallowedSelectors)
+            if (inputPart.equalsIgnoreCase(check))
+                return true;
+        return false;
+    }
+
     @Handler
     void onDrawScreen(InGameHudDrawEvent event) {
         final MinecraftClient mc = StarfruitMod.minecraft;
@@ -552,55 +629,61 @@ public class ModuleManager {
         final TextRenderer textRenderer = mc.textRenderer;
         final double y = mc.getWindow().getScaledHeight() - ((textRenderer.fontHeight * 2) + 8);
         if (chat != null && chat.isChatFocused()) {
-            final String text = ((ChatScreenInterfaceMixin) mc.currentScreen).getChatField().getText();
-            final StringTokenizer tokenizer = new StringTokenizer(text, " ");
-            if (text.charAt(0) != '.')
+            final String text =
+                    ((ChatScreenInterfaceMixin) mc.currentScreen).getChatField().getText();
+            if (text.length() <= 0 || text.charAt(0) != '.')
                 return;
+            final StringTokenizer tokenizer = new StringTokenizer(text, " ");
             final List<String> parts = new ArrayList<>();
             while (tokenizer.hasMoreTokens()) {
                 parts.add(tokenizer.nextToken());
             }
             // .fl (fuzzy modules)
-            try {
-                if (parts.size() > 0) {
-                    final List<ExtractedResult> fuzzedModules = this.fuzzySearchModules(parts.get(0).substring(1));
-                    final boolean showModuleSelector = parts.size() == 1;
-                    final boolean showVariableSelectorPartsPredicate = parts.size() >= 2;
-                    final boolean showVariableSelector = showModuleSelector || showVariableSelectorPartsPredicate;
-                    System.out.println(Arrays.toString(fuzzedModules.toArray(new ExtractedResult[] {})));
-                    if (showModuleSelector && !text.endsWith(" ")) {
-                        if (text.trim().equals(".")) {
-                            drawStringHints(this.moduleNames, "modules", 4, y);
-                        } else {
-                            drawFuzzedResults(fuzzedModules, "modules", 4, y);
-                        }
-                    } else if (showVariableSelector) {
-                        final StatefulModule selectedModule = this.moduleNameCache
-                                .get(fuzzedModules.get(0).getString().toLowerCase());
-                        final double selectedModuleWidth = textRenderer.getStringWidth(selectedModule.getInfo().name);
-                        final double x = 4 + selectedModuleWidth;
-                        DrawUtility.fill(2, y - 2, x + 2, y + textRenderer.fontHeight + 1,
-                                StarfruitMod.Colors.RGBA(0.10, 0.10, 0.10, 0.20).getRGB());
-                        textRenderer.drawWithShadow(selectedModule.getInfo().name, 4, (float) y,
-                                selectedModule.getInfo().color.getRGB());
-                        final double offsetX = x + 10;
-                        if (showVariableSelectorPartsPredicate) {
-                            final List<ExtractedResult> fuzzedVariables = this.fuzzySearchVariables(selectedModule,
-                                    parts.get(1));
-                            this.drawFuzzedResults(fuzzedVariables, "variables", offsetX, y);
-                        } else {
-                            drawStringHints(this.moduleVariableNameCache.get(selectedModule), "variables", offsetX, y);
-                        }
+            if (parts.size() > 0) {
+                // TODO(haze): extract into method
+                final String command = parts.get(0).substring(1);
+                if (doesCommandNotRequireSuggestion(command))
+                    return;
+                final List<ExtractedResult> fuzzedModules = this.fuzzySearchModules(command);
+                final boolean showModuleSelector = parts.size() == 1;
+                final boolean showVariableSelectorPartsPredicate = parts.size() >= 2;
+                final boolean showVariableSelector =
+                        showModuleSelector || showVariableSelectorPartsPredicate;
+                if (showModuleSelector && !text.endsWith(" ")) {
+                    if (text.trim().equals(".")) {
+                        drawStringHints(this.moduleNames, "modules", 4, y);
+                    } else {
+                        drawFuzzedResults(fuzzedModules, "modules", 4, y);
+                    }
+                } else if (showVariableSelector) {
+                    if (doesSelectorNotRequireSuggestion(parts.get(1)))
+                        return;
+                    final StatefulModule selectedModule = this.moduleNameCache
+                            .get(fuzzedModules.get(0).getString().toLowerCase());
+                    final double selectedModuleWidth =
+                            textRenderer.getStringWidth(selectedModule.getInfo().name);
+                    final double x = 4 + selectedModuleWidth;
+                    DrawUtility.fill(2, y - 2, x + 2, y + textRenderer.fontHeight + 1,
+                            StarfruitMod.Colors.RGBA(0.10, 0.10, 0.10, 0.20).getRGB());
+                    textRenderer.drawWithShadow(selectedModule.getInfo().name, 4, (float) y,
+                            selectedModule.getInfo().color.getRGB());
+                    final double offsetX = x + 10;
+                    if (showVariableSelectorPartsPredicate) {
+                        final List<ExtractedResult> fuzzedVariables =
+                                this.fuzzySearchVariables(selectedModule, parts.get(1));
+                        this.drawFuzzedResults(fuzzedVariables, "variables", offsetX, y);
+                    } else {
+                        drawStringHints(this.moduleVariableNameCache.get(selectedModule),
+                                "variables", offsetX, y);
                     }
                 }
-            } catch (Throwable t) {
-                t.printStackTrace();
             }
             // TODO(haze): magic variables
         }
     }
 
-    void drawFuzzedResults(List<ExtractedResult> results, String missingItemType, double x, double y) {
+    void drawFuzzedResults(List<ExtractedResult> results, String missingItemType, double x,
+            double y) {
         final List<String> strings = new ArrayList<>();
         for (final ExtractedResult res : results) {
             strings.add(res.getString());
@@ -608,6 +691,7 @@ public class ModuleManager {
         this.drawStringHints(strings, missingItemType, x, y);
     }
 
+    // TODO(haze): un-magic variableify
     void drawStringHints(Iterable<String> results, String missingItemType, double x, double y) {
         final TextRenderer textRenderer = StarfruitMod.minecraft.textRenderer;
         if (!results.iterator().hasNext()) {
@@ -624,11 +708,12 @@ public class ModuleManager {
             if (x + textWidth >= StarfruitMod.minecraft.getWindow().getScaledWidth())
                 break;
             final StatefulModule mod = this.moduleNameCache.get(str.toLowerCase());
-            final int color = first ? 0xFFF8F1AC : mod == null ? 0xFFC8C8C8 : mod.getInfo().color.getRGB();
+            final int color =
+                    first ? 0xFFF8F1AC : mod == null ? 0xFFC8C8C8 : mod.getInfo().color.getRGB();
 
             DrawUtility.fill(x - 2, y - 2, x + textWidth + 2, y + textRenderer.fontHeight + 1,
-                    first ? StarfruitMod.Colors.RGBA(0.50, 0.50, 0.50, 0.50).getRGB()
-                            : StarfruitMod.Colors.RGBA(0.10, 0.10, 0.10, 0.20).getRGB());
+                    first ? StarfruitMod.Colors.RGBA(0.10, 0.10, 0.10, 0.20).getRGB()
+                            : StarfruitMod.Colors.RGBA(0.20, 0.20, 0.20, 0.10).getRGB());
             textRenderer.drawWithShadow(str, (float) x, (float) y, color);
             x += textWidth + 8;
             if (first)
@@ -642,5 +727,10 @@ public class ModuleManager {
 
     List<ExtractedResult> fuzzySearchVariables(StatefulModule mod, String input) {
         return FuzzySearch.extractSorted(input, this.moduleVariableNameCache.get(mod), 50);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T extends StatefulModule> T getStatefulModule(Class<T> moduleClass) {
+        return (T) this.moduleClassCache.get(moduleClass);
     }
 }

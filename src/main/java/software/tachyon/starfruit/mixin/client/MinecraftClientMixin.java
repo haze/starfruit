@@ -11,7 +11,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
 import net.minecraft.block.entity.SkullBlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ProgressScreen;
@@ -22,21 +21,14 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.UserCache;
 import software.tachyon.starfruit.StarfruitMod;
+import software.tachyon.starfruit.module.event.TickEvent;
 import software.tachyon.starfruit.module.event.WorldLoadEvent;
-
+import software.tachyon.starfruit.module.event.TickEvent.State;
 import java.io.File;
 import java.util.UUID;
 
 @Mixin(MinecraftClient.class)
 public abstract class MinecraftClientMixin {
-    // @Inject(method = "joinWorld", at = @At("RETURN"))
-    // protected void afterWorldLoad(ClientWorld world, CallbackInfo ci) {
-    // if (StarfruitMod.minecraft)
-    // StarfruitMod.getModuleManager().getBus().post(new
-    // WorldLoadEvent()).asynchronously();
-    // }
-    //
-    //
     @Shadow
     private ClientWorld world;
 
@@ -45,6 +37,16 @@ public abstract class MinecraftClientMixin {
 
     @Shadow
     public abstract void reset(Screen screen);
+
+    @Inject(method = "tick", at = @At("HEAD"))
+    public void preTick(CallbackInfo ci) {
+        StarfruitMod.getModuleManager().getBus().post(new TickEvent(State.PRE)).now();
+    }
+
+    @Inject(method = "tick", at = @At("RETURN"))
+    public void postTick(CallbackInfo ci) {
+        StarfruitMod.getModuleManager().getBus().post(new TickEvent(State.POST)).now();
+    }
 
     @Overwrite
     public void joinWorld(ClientWorld world) {
@@ -60,10 +62,12 @@ public abstract class MinecraftClientMixin {
         if (isNull)
             StarfruitMod.getModuleManager().getBus().post(new WorldLoadEvent()).asynchronously();
         if (!mixin.getIsIntegratedServerRunning()) {
-            AuthenticationService authenticationService = new YggdrasilAuthenticationService(mixin.getNetProxy(),
-                    UUID.randomUUID().toString());
-            MinecraftSessionService minecraftSessionService = authenticationService.createMinecraftSessionService();
-            GameProfileRepository gameProfileRepository = authenticationService.createProfileRepository();
+            AuthenticationService authenticationService = new YggdrasilAuthenticationService(
+                    mixin.getNetProxy(), UUID.randomUUID().toString());
+            MinecraftSessionService minecraftSessionService =
+                    authenticationService.createMinecraftSessionService();
+            GameProfileRepository gameProfileRepository =
+                    authenticationService.createProfileRepository();
             UserCache userCache = new UserCache(gameProfileRepository,
                     new File(this.runDirectory, MinecraftServer.USER_CACHE_FILE.getName()));
             SkullBlockEntity.setUserCache(userCache);

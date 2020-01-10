@@ -9,21 +9,27 @@ public class ModuleInfo {
     public String name;
     public Category category;
     public Color color;
+    private final boolean hidden;
     private final String colorHex;
 
     public String hexDisplayString() {
         return String.format("%c%s%s%cr", '\u0666', this.colorHex, this.name, StarfruitMod.COLOR_SEPARATOR);
     }
 
-    ModuleInfo(String name, Category category, Color color) {
+    public boolean isHidden() {
+        return this.hidden;
+    }
+
+    ModuleInfo(String name, Category category, Color color, boolean hidden) {
         this.name = name;
         this.category = category;
         this.color = color;
+        this.hidden = hidden;
         this.colorHex = Integer.toHexString(this.color.getRGB()).substring(2).toUpperCase();
     }
 
     public enum Category {
-        MOVEMENT("Movement"), RENDER("Render");
+        UTILITY("Utility"), MOVEMENT("Movement"), RENDER("Render");
 
         public String normalized = null;
 
@@ -37,9 +43,11 @@ public class ModuleInfo {
     }
 
     public static class Builder {
+        // defaults
         private String name = null;
         private Category category = null;
         private Color color = null;
+        private boolean hidden = false;
 
         public Builder name(String name) {
             this.name = name;
@@ -56,10 +64,15 @@ public class ModuleInfo {
             return this;
         }
 
+        public Builder hidden(boolean hidden) {
+            this.hidden = hidden;
+            return this;
+        }
+
         public ModuleInfo build() {
             if (this.color == null)
                 this.color = StarfruitMod.Colors.moduleColor((float) Math.random());
-            return new ModuleInfo(this.name, this.category, this.color);
+            return new ModuleInfo(this.name, this.category, this.color, this.hidden);
         }
     }
 
