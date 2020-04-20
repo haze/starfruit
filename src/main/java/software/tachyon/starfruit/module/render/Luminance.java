@@ -30,7 +30,8 @@ public class Luminance extends StatefulModule {
         }
 
         boolean isFinished() {
-            return Thread.interrupted() || System.currentTimeMillis() - this.startMS > this.transitionTimeMS.get();
+            return Thread.interrupted()
+                    || System.currentTimeMillis() - this.startMS > this.transitionTimeMS.get();
         }
 
         void resetTimer() {
@@ -74,11 +75,11 @@ public class Luminance extends StatefulModule {
                 for (int i = 0; i < dim.getLightLevelToBrightness().length; i++) {
                     final double newValue = this.desiredLightmapValue.isPresent()
                             ? MathHelper.lerp(eased, this.initialLightmap[i],
-                                    Math.max(this.desiredLightmapValue.get(), this.initialLightmap[i]))
-                            : MathHelper.lerp(eased, this.cachedLightmap[i], this.initialLightmap[i]);
+                                    Math.max(this.desiredLightmapValue.get(),
+                                            this.initialLightmap[i]))
+                            : MathHelper.lerp(eased, this.cachedLightmap[i],
+                                    this.initialLightmap[i]);
                     if (newValue != Double.NaN) {
-                        // System.out.printf("(eased=%.2f) Setting luminance to %.5f\n", eased,
-                        // newValue);
                         dim.getLightLevelToBrightness()[i] = (float) newValue;
                     }
                 }
@@ -114,8 +115,8 @@ public class Luminance extends StatefulModule {
 
     @Override
     public void onEnable() {
-        this.initialLightmap = ((DimensionMixin) StarfruitMod.minecraft.world.dimension).getLightLevelToBrightness()
-                .clone();
+        this.initialLightmap = ((DimensionMixin) StarfruitMod.minecraft.world.dimension)
+                .getLightLevelToBrightness().clone();
         this.adjustLuminanceTask.setDesiredLightmapValue(Optional.of(0.25));
         if (!this.isTaskRunning())
             this.adjustLuminanceTask.setInitialLightmap(this.initialLightmap);
@@ -125,8 +126,8 @@ public class Luminance extends StatefulModule {
 
     @SuppressWarnings("unchecked")
     void launchAdjustmentTask() {
-        this.runningAdjustmentTask = Optional
-                .of((Future<Void>) StarfruitMod.getModuleManager().getThreadPool().submit(this.adjustLuminanceTask));
+        this.runningAdjustmentTask = Optional.of((Future<Void>) StarfruitMod.getModuleManager()
+                .getThreadPool().submit(this.adjustLuminanceTask));
     }
 
     boolean isTaskRunning() {

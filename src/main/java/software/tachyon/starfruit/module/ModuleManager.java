@@ -9,7 +9,7 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.hud.ChatHud;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.network.listener.ServerPlayPacketListener;
-import net.minecraft.server.network.packet.ChatMessageC2SPacket;
+import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
 import software.tachyon.starfruit.module.event.api.Event;
 import software.tachyon.starfruit.module.event.gui.InGameHudDrawEvent;
 import software.tachyon.starfruit.module.event.GameJoinEvent;
@@ -22,6 +22,7 @@ import software.tachyon.starfruit.module.movement.Velocity;
 import software.tachyon.starfruit.module.network.PacketLogger;
 import software.tachyon.starfruit.module.render.Luminance;
 import software.tachyon.starfruit.module.utility.AutoArmor;
+import software.tachyon.starfruit.module.utility.FastPlace;
 import software.tachyon.starfruit.module.render.Camera;
 import software.tachyon.starfruit.module.render.ESP;
 import software.tachyon.starfruit.module.variable.Variable;
@@ -44,7 +45,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
-
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -165,6 +166,7 @@ public class ModuleManager {
         this.register(new AutoArmor(null));
         this.register(new PacketLogger(null));
         this.register(new NoFall(null));
+        this.register(new FastPlace(GLFW_KEY_P));
     }
 
     public void save() throws IOException {

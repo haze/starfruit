@@ -2,18 +2,18 @@ package software.tachyon.starfruit.module.utility;
 
 import net.engio.mbassy.listener.Handler;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ingame.AbstractContainerScreen;
+import net.minecraft.client.gui.screen.ingame.ContainerScreen;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
-import net.minecraft.client.network.packet.GuiCloseS2CPacket;
+import net.minecraft.network.packet.c2s.play.GuiCloseC2SPacket;
 import net.minecraft.container.SlotActionType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.listener.PacketListener;
-import net.minecraft.server.network.packet.ClickWindowC2SPacket;
-import net.minecraft.server.network.packet.GuiActionConfirmC2SPacket;
+import net.minecraft.network.packet.c2s.play.ClickWindowC2SPacket;
+import net.minecraft.network.packet.c2s.play.ConfirmGuiActionC2SPacket;
 import static net.minecraft.item.Items.*;
 import java.util.LinkedList;
 import java.util.Optional;
@@ -194,7 +194,7 @@ public class AutoArmor extends StatefulModule {
 
   boolean isInAcceptableInventory() {
     final Screen curScreen = StarfruitMod.minecraft.currentScreen;
-    return curScreen instanceof AbstractContainerScreen && !(curScreen instanceof InventoryScreen);
+    return curScreen instanceof ContainerScreen && !(curScreen instanceof InventoryScreen);
   }
 
   void equip(ItemStack stack, int inventory, int from, int to, int armorItemStackIndex) {
@@ -214,7 +214,7 @@ public class AutoArmor extends StatefulModule {
         equipSwap(from, to);
       }
     }
-    netHandler.sendPacket(new GuiActionConfirmC2SPacket(0, s, true));
+    netHandler.sendPacket(new ConfirmGuiActionC2SPacket(0, s, true));
   }
 
   final int ARMOR_HELMET_SLOT = 3;
@@ -229,7 +229,7 @@ public class AutoArmor extends StatefulModule {
 
   @Handler
   <T extends PacketListener> void recvPacketListener(RecvPacketEvent<T> event) {
-    if (event.getPacket() instanceof GuiCloseS2CPacket) {
+    if (event.getPacket() instanceof GuiCloseC2SPacket) {
       System.out.println(event.getPacket().toString());
       while (!this.alternateInventoryQueue.isEmpty()) {
         final QueueArmorTask task = this.alternateInventoryQueue.poll();

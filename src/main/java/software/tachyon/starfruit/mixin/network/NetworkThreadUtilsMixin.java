@@ -6,8 +6,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 
 import net.engio.mbassy.bus.MBassador;
-import net.minecraft.client.network.packet.GuiSlotUpdateS2CPacket;
-import net.minecraft.client.network.packet.InventoryS2CPacket;
+import net.minecraft.network.packet.s2c.play.ContainerSlotUpdateS2CPacket;;
+import net.minecraft.network.packet.s2c.play.InventoryS2CPacket;
+import net.minecraft.container.Container;
 import net.minecraft.network.NetworkThreadUtils;
 import net.minecraft.network.Packet;
 import net.minecraft.network.listener.PacketListener;
@@ -36,8 +37,8 @@ public class NetworkThreadUtilsMixin {
     private static <T extends PacketListener> void redirectHandlePacketPost(PacketListener handler,
             Packet<T> packet, CallbackInfo ci) {
         MBassador<Event> bus = StarfruitMod.getModuleManager().getBus();
-        if (packet instanceof GuiSlotUpdateS2CPacket) {
-            bus.post(new InventoryUpdateEvent((GuiSlotUpdateS2CPacket) packet)).now();
+        if (packet instanceof Container) {
+            bus.post(new InventoryUpdateEvent((ContainerSlotUpdateS2CPacket) packet)).now();
         }
     }
 }

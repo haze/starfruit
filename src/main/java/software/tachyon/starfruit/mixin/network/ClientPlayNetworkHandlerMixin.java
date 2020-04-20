@@ -2,7 +2,7 @@ package software.tachyon.starfruit.mixin.network;
 
 import net.engio.mbassy.bus.MBassador;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.network.packet.GameJoinS2CPacket;
+import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.Packet;
 import net.minecraft.network.listener.PacketListener;

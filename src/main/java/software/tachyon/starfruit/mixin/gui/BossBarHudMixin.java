@@ -11,11 +11,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentSkipListMap;
 
 import net.minecraft.client.gui.hud.BossBarHud;
 import net.minecraft.client.gui.hud.ClientBossBar;
-import net.minecraft.client.network.packet.BossBarS2CPacket;
+import net.minecraft.network.packet.s2c.play.BossBarS2CPacket;
 
 @Mixin(BossBarHud.class)
 public abstract class BossBarHudMixin {

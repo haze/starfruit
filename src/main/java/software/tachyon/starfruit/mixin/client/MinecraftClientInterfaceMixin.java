@@ -7,7 +7,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.particle.ParticleManager;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.util.Session;
@@ -29,4 +28,6 @@ public interface MinecraftClientInterfaceMixin {
     @Accessor
     public Proxy getNetProxy();
 
+    @Accessor
+    void setItemUseCooldown(int itemUseCooldown);
 }

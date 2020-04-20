@@ -10,7 +10,7 @@ import software.tachyon.starfruit.module.variable.Variable;
 import net.engio.mbassy.listener.Handler;
 import net.engio.mbassy.listener.Listener;
 import net.engio.mbassy.listener.References;
-import net.minecraft.client.network.packet.EntityVelocityUpdateS2CPacket;
+import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
 import net.minecraft.network.listener.PacketListener;
 
 @Listener(references = References.Strong)
