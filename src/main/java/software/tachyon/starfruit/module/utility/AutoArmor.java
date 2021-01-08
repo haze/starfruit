@@ -2,22 +2,23 @@ package software.tachyon.starfruit.module.utility;
 
 import net.engio.mbassy.listener.Handler;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ingame.ContainerScreen;
+import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
-import net.minecraft.network.packet.c2s.play.GuiCloseC2SPacket;
-import net.minecraft.container.SlotActionType;
+import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket;
+import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket;
+import net.minecraft.network.packet.c2s.play.ConfirmScreenActionC2SPacket;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.listener.PacketListener;
-import net.minecraft.network.packet.c2s.play.ClickWindowC2SPacket;
-import net.minecraft.network.packet.c2s.play.ConfirmGuiActionC2SPacket;
 import static net.minecraft.item.Items.*;
 import java.util.LinkedList;
 import java.util.Optional;
 import java.util.Queue;
+
+import net.minecraft.screen.slot.SlotActionType;
 import software.tachyon.starfruit.StarfruitMod;
 import software.tachyon.starfruit.module.ModuleInfo;
 import software.tachyon.starfruit.module.StatefulModule;
@@ -159,7 +160,7 @@ public class AutoArmor extends StatefulModule {
   void equipDirect(ItemStack stack, int from) {
     final ClientPlayerInteractionManager manager = StarfruitMod.minecraft.interactionManager;
     final ClientPlayerEntity player = StarfruitMod.minecraft.player;
-    final int inventorySyncId = player.playerContainer.syncId;
+    final int inventorySyncId = player.playerScreenHandler.syncId;
     manager.clickSlot(inventorySyncId, from, 0, SlotActionType.QUICK_MOVE, player);
   }
 
@@ -184,24 +185,24 @@ public class AutoArmor extends StatefulModule {
     final ClientPlayerEntity player = StarfruitMod.minecraft.player;
     final ClientPlayerInteractionManager manager = StarfruitMod.minecraft.interactionManager;
     final int inventorySyncId;
-    if (this.isInAcceptableInventory() && player.container != null) {
-      inventorySyncId = player.container.syncId;
+    if (this.isInAcceptableInventory() && player.currentScreenHandler != null) {
+      inventorySyncId = player.currentScreenHandler.syncId;
     } else {
-      inventorySyncId = player.playerContainer.syncId;
+      inventorySyncId = player.playerScreenHandler.syncId;
     }
     manager.clickSlot(inventorySyncId, slot, 0, type, player);
   }
 
   boolean isInAcceptableInventory() {
     final Screen curScreen = StarfruitMod.minecraft.currentScreen;
-    return curScreen instanceof ContainerScreen && !(curScreen instanceof InventoryScreen);
+    return curScreen instanceof HandledScreen && !(curScreen instanceof InventoryScreen);
   }
 
   void equip(ItemStack stack, int inventory, int from, int to, int armorItemStackIndex) {
     System.out.println("AutoArmor.equip()");
     final ClientPlayerEntity player = StarfruitMod.minecraft.player;
     final ClientPlayNetworkHandler netHandler = StarfruitMod.minecraft.getNetworkHandler();
-    short s = player.container.getNextActionId(player.inventory);
+    short s = player.currentScreenHandler.getNextActionId(player.inventory);
     if (!isInAcceptableInventory()) {
       // move item to player inv
       this.quickMoveSlot(from);
@@ -214,7 +215,7 @@ public class AutoArmor extends StatefulModule {
         equipSwap(from, to);
       }
     }
-    netHandler.sendPacket(new ConfirmGuiActionC2SPacket(0, s, true));
+    netHandler.sendPacket(new ConfirmScreenActionC2SPacket(0, s, true));
   }
 
   final int ARMOR_HELMET_SLOT = 3;
@@ -229,7 +230,7 @@ public class AutoArmor extends StatefulModule {
 
   @Handler
   <T extends PacketListener> void recvPacketListener(RecvPacketEvent<T> event) {
-    if (event.getPacket() instanceof GuiCloseC2SPacket) {
+    if (event.getPacket() instanceof CloseHandledScreenC2SPacket) {
       System.out.println(event.getPacket().toString());
       while (!this.alternateInventoryQueue.isEmpty()) {
         final QueueArmorTask task = this.alternateInventoryQueue.poll();
@@ -240,14 +241,14 @@ public class AutoArmor extends StatefulModule {
 
   @Handler
   <T extends PacketListener> void sendPacketListener(SendPacketEvent<T> event) {
-    if (event.getPacket() instanceof ClickWindowC2SPacket) {
-      final ClickWindowC2SPacket packet = (ClickWindowC2SPacket) event.getPacket();
+    if (event.getPacket() instanceof ClickSlotC2SPacket) {
+      final ClickSlotC2SPacket packet = (ClickSlotC2SPacket) event.getPacket();
       System.out.printf("syncID: %d\n", packet.getSyncId());
       System.out.printf("stack: %s\n", packet.getStack().toString());
-      System.out.printf("button: %d\n", packet.getButton());
+      System.out.printf("button: %d\n", packet.getClickData());
       System.out.printf("slot: %d\n", packet.getSlot());
       System.out.printf("actionType: %s\n", packet.getActionType().toString());
-      System.out.printf("transID: %d\n", packet.getTransactionId());
+      System.out.printf("transID: %d\n", packet.getActionId());
       System.out.println();
     }
   }

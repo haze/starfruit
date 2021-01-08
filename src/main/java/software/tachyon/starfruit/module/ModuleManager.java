@@ -7,7 +7,9 @@ import net.engio.mbassy.listener.References;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.hud.ChatHud;
+import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.client.network.PlayerListEntry;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.network.listener.ServerPlayPacketListener;
 import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
 import software.tachyon.starfruit.module.event.api.Event;
@@ -19,6 +21,7 @@ import software.tachyon.starfruit.module.movement.Flight;
 import software.tachyon.starfruit.module.movement.NoFall;
 import software.tachyon.starfruit.module.movement.Sprint;
 import software.tachyon.starfruit.module.movement.Velocity;
+import software.tachyon.starfruit.module.network.Crash;
 import software.tachyon.starfruit.module.network.PacketLogger;
 import software.tachyon.starfruit.module.render.Luminance;
 import software.tachyon.starfruit.module.utility.AutoArmor;
@@ -99,8 +102,8 @@ public class ModuleManager {
     int moduleNameComparator(StatefulModule a, StatefulModule b) {
         final String an = a.getInfo().name;
         final String bn = b.getInfo().name;
-        final double al = StarfruitMod.minecraft.textRenderer.getStringWidth(an);
-        final double bl = StarfruitMod.minecraft.textRenderer.getStringWidth(bn);
+        final double al = StarfruitMod.minecraft.textRenderer.getWidth(an);
+        final double bl = StarfruitMod.minecraft.textRenderer.getWidth(bn);
         if (al == bl)
             return an.compareTo(bn);
         return Double.compare(bl, al);
@@ -163,6 +166,7 @@ public class ModuleManager {
         this.register(new Flight(GLFW_KEY_K));
         this.register(new Velocity(GLFW_KEY_V));
         this.register(new Camera(GLFW_KEY_M));
+        this.register(new Crash(GLFW_KEY_L));
         this.register(new AutoArmor(null));
         this.register(new PacketLogger(null));
         this.register(new NoFall(null));
@@ -630,7 +634,7 @@ public class ModuleManager {
         final ChatHud chat = mc.inGameHud.getChatHud();
         final TextRenderer textRenderer = mc.textRenderer;
         final double y = mc.getWindow().getScaledHeight() - ((textRenderer.fontHeight * 2) + 8);
-        if (chat != null && chat.isChatFocused()) {
+        if (chat != null && mc.currentScreen instanceof ChatScreen) {
             final String text =
                     ((ChatScreenInterfaceMixin) mc.currentScreen).getChatField().getText();
             if (text.length() <= 0 || text.charAt(0) != '.')
@@ -653,9 +657,9 @@ public class ModuleManager {
                         showModuleSelector || showVariableSelectorPartsPredicate;
                 if (showModuleSelector && !text.endsWith(" ")) {
                     if (text.trim().equals(".")) {
-                        drawStringHints(this.moduleNames, "modules", 4, y);
+                        drawStringHints(event.getMatrices(), this.moduleNames, "modules", 4, y);
                     } else {
-                        drawFuzzedResults(fuzzedModules, "modules", 4, y);
+                        drawFuzzedResults(event.getMatrices(), fuzzedModules, "modules", 4, y);
                     }
                 } else if (showVariableSelector) {
                     if (doesSelectorNotRequireSuggestion(parts.get(1)))
@@ -663,19 +667,19 @@ public class ModuleManager {
                     final StatefulModule selectedModule = this.moduleNameCache
                             .get(fuzzedModules.get(0).getString().toLowerCase());
                     final double selectedModuleWidth =
-                            textRenderer.getStringWidth(selectedModule.getInfo().name);
+                            textRenderer.getWidth(selectedModule.getInfo().name);
                     final double x = 4 + selectedModuleWidth;
                     DrawUtility.fill(2, y - 2, x + 2, y + textRenderer.fontHeight + 1,
                             StarfruitMod.Colors.RGBA(0.10, 0.10, 0.10, 0.20).getRGB());
-                    textRenderer.drawWithShadow(selectedModule.getInfo().name, 4, (float) y,
+                    textRenderer.drawWithShadow(event.getMatrices(), selectedModule.getInfo().name, 4, (float) y,
                             selectedModule.getInfo().color.getRGB());
                     final double offsetX = x + 10;
                     if (showVariableSelectorPartsPredicate) {
                         final List<ExtractedResult> fuzzedVariables =
                                 this.fuzzySearchVariables(selectedModule, parts.get(1));
-                        this.drawFuzzedResults(fuzzedVariables, "variables", offsetX, y);
+                        this.drawFuzzedResults(event.getMatrices(), fuzzedVariables, "variables", offsetX, y);
                     } else {
-                        drawStringHints(this.moduleVariableNameCache.get(selectedModule),
+                        drawStringHints(event.getMatrices(), this.moduleVariableNameCache.get(selectedModule),
                                 "variables", offsetX, y);
                     }
                 }
@@ -684,29 +688,29 @@ public class ModuleManager {
         }
     }
 
-    void drawFuzzedResults(List<ExtractedResult> results, String missingItemType, double x,
+    void drawFuzzedResults(MatrixStack matrices, List<ExtractedResult> results, String missingItemType, double x,
             double y) {
         final List<String> strings = new ArrayList<>();
         for (final ExtractedResult res : results) {
             strings.add(res.getString());
         }
-        this.drawStringHints(strings, missingItemType, x, y);
+        this.drawStringHints(matrices, strings, missingItemType, x, y);
     }
 
     // TODO(haze): un-magic variableify
-    void drawStringHints(Iterable<String> results, String missingItemType, double x, double y) {
+    void drawStringHints(MatrixStack stack, Iterable<String> results, String missingItemType, double x, double y) {
         final TextRenderer textRenderer = StarfruitMod.minecraft.textRenderer;
         if (!results.iterator().hasNext()) {
             final String text = "No " + missingItemType;
-            final double textWidth = textRenderer.getStringWidth(text);
+            final double textWidth = textRenderer.getWidth(text);
             DrawUtility.fill(x - 2, y - 2, x + textWidth + 2, y + textRenderer.fontHeight + 1,
                     StarfruitMod.Colors.RGBA(0.10, 0.10, 0.10, 0.20).getRGB());
-            textRenderer.drawWithShadow(text, (float) x, (float) y, 0xFFC8C8C8);
+            textRenderer.drawWithShadow(stack, text, (float) x, (float) y, 0xFFC8C8C8);
             return;
         }
         boolean first = true;
         for (final String str : results) {
-            final double textWidth = textRenderer.getStringWidth(str);
+            final double textWidth = textRenderer.getWidth(str);
             if (x + textWidth >= StarfruitMod.minecraft.getWindow().getScaledWidth())
                 break;
             final StatefulModule mod = this.moduleNameCache.get(str.toLowerCase());
@@ -716,7 +720,7 @@ public class ModuleManager {
             DrawUtility.fill(x - 2, y - 2, x + textWidth + 2, y + textRenderer.fontHeight + 1,
                     first ? StarfruitMod.Colors.RGBA(0.10, 0.10, 0.10, 0.20).getRGB()
                             : StarfruitMod.Colors.RGBA(0.20, 0.20, 0.20, 0.10).getRGB());
-            textRenderer.drawWithShadow(str, (float) x, (float) y, color);
+            textRenderer.drawWithShadow(stack, str, (float) x, (float) y, color);
             x += textWidth + 8;
             if (first)
                 first = false;

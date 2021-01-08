@@ -28,7 +28,7 @@ public class CustomChat extends StatefulModule {
     }
 
     public void render(double mouseX, double mouseY, float delta) {
-      this.textRenderer.draw(String.format("jordin %f %f", mouseX, mouseY), 2, 2, 0xFFFFFFFF);
+//      this.textRenderer.draw(String.format("jordin %f %f", mouseX, mouseY), 2, 2, 0xFFFFFFFF);
     }
   }
 }

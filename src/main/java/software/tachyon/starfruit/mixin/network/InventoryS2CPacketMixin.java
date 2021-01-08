@@ -9,8 +9,8 @@ import net.minecraft.item.ItemStack;
 @Mixin(InventoryS2CPacket.class)
 public interface InventoryS2CPacketMixin {
     @Accessor
-    public int getGuiId();
+    public int getSyncId();
 
     @Accessor
-    public List<ItemStack> getSlotStackList();
+    public List<ItemStack> getContents();
 }

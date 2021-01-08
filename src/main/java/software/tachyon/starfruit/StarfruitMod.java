@@ -7,6 +7,7 @@ import java.util.Properties;
 import java.util.Scanner;
 import java.util.UUID;
 
+import net.minecraft.util.Util;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
@@ -198,7 +199,7 @@ public class StarfruitMod implements ModInitializer {
         COLOR_SEPARATOR, String.format(format, items));
 
     if (minecraft.inGameHud != null)
-      minecraft.inGameHud.addChatMessage(MessageType.SYSTEM, new LiteralText(formatted));
+      minecraft.inGameHud.addChatMessage(MessageType.SYSTEM, new LiteralText(formatted), Util.NIL_UUID);
   }
 
   public static void consoleInfo(String format, Object... items) {

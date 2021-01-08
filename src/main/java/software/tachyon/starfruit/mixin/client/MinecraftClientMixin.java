@@ -61,7 +61,7 @@ public abstract class MinecraftClientMixin {
         this.world = world;
         if (isNull)
             StarfruitMod.getModuleManager().getBus().post(new WorldLoadEvent()).asynchronously();
-        if (!mixin.getIsIntegratedServerRunning()) {
+        if (!mixin.getIntegratedServerRunning()) {
             AuthenticationService authenticationService = new YggdrasilAuthenticationService(
                     mixin.getNetProxy(), UUID.randomUUID().toString());
             MinecraftSessionService minecraftSessionService =

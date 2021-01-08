@@ -17,7 +17,7 @@ public interface MinecraftClientInterfaceMixin {
     public void setSession(Session session);
 
     @Accessor
-    public boolean getIsIntegratedServerRunning();
+    public boolean getIntegratedServerRunning();
 
     @Accessor
     public ParticleManager getParticleManager();

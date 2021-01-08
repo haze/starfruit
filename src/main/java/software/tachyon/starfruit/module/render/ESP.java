@@ -6,6 +6,7 @@ import java.util.Optional;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 
+import net.minecraft.client.util.math.MatrixStack;
 import org.lwjgl.opengl.GL11;
 
 import net.engio.mbassy.listener.Handler;
@@ -190,14 +191,14 @@ public class ESP extends StatefulModule {
   final double NAMETAG_X_PADDING = 2.5;
   final double NAMETAG_Y_PADDING = 1.5;
 
-  void drawNameTag(double interpX, double interpY, double interpZ, Entity ent) {
+  void drawNameTag(MatrixStack matrices, double interpX, double interpY, double interpZ, Entity ent) {
     // find screen position
     ProjectionUtility.project(interpX, interpY + ent.getEyeHeight(ent.getPose()) + 0.6, interpZ, false)
         .ifPresent(nametagPos -> {
           // draw box
-          final String entName = ent.getName().asFormattedString();
+          final String entName = DrawUtility.asString(ent.getName().asOrderedText());
 
-          double nameWidth = StarfruitMod.minecraft.textRenderer.getStringWidth(entName);
+          double nameWidth = StarfruitMod.minecraft.textRenderer.getWidth(entName);
           final double halfStrHeight = StarfruitMod.minecraft.textRenderer.fontHeight / 2.0;
           final double yPadding = halfStrHeight + NAMETAG_Y_PADDING;
           final double xPadding = (nameWidth / 2.0) + NAMETAG_X_PADDING;
@@ -214,7 +215,7 @@ public class ESP extends StatefulModule {
               this.nametagSaturation.get(), this.nametagLuminance.get(), this.nametagAlpha.get() - 0.10).getRGB());
 
           // draw text
-          DrawUtility.drawCenteredString(StarfruitMod.minecraft.textRenderer, entName, nametagPos.getX(),
+          DrawUtility.drawCenteredString(matrices, StarfruitMod.minecraft.textRenderer, entName, nametagPos.getX(),
               nametagPos.getY() - halfStrHeight + 1, 0xFFFFFFFF);
         });
   }
@@ -238,7 +239,7 @@ public class ESP extends StatefulModule {
         if (this.tracers.get() && shouldDrawTracer(ent))
           this.drawTracer(x, y, z, ent);
         if (this.nametags.get() && shouldDrawNametag(ent))
-          this.drawNameTag(x, y, z, ent);
+          this.drawNameTag(event.getMatrices(), x, y, z, ent);
       }
     }
   }

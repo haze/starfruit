@@ -15,6 +15,7 @@ import java.util.UUID;
 import net.minecraft.client.gui.hud.BossBarHud;
 import net.minecraft.client.gui.hud.ClientBossBar;
 import net.minecraft.network.packet.s2c.play.BossBarS2CPacket;
+import software.tachyon.starfruit.utility.DrawUtility;
 
 @Mixin(BossBarHud.class)
 public abstract class BossBarHudMixin {
@@ -27,8 +28,8 @@ public abstract class BossBarHudMixin {
     public void handlePacket(BossBarS2CPacket packet, CallbackInfo ci) {
         final List<Map.Entry<UUID, ClientBossBar>> list = new ArrayList<>();
         list.addAll(this.bossBars.entrySet());
-        list.sort((a, b) -> Integer.compare(b.getValue().getName().asFormattedString().length(),
-                a.getValue().getName().asFormattedString().length()));
+        list.sort((a, b) -> Integer.compare(DrawUtility.asString(b.getValue().getName().asOrderedText()).length(),
+                DrawUtility.asString(a.getValue().getName().asOrderedText()).length()));
         this.bossBars.clear();
         for (final Map.Entry<UUID, ClientBossBar> entry : list) {
             this.bossBars.put(entry.getKey(), entry.getValue());

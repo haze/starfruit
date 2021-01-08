@@ -1,5 +1,6 @@
 package software.tachyon.starfruit.utility;
 
+import com.mojang.authlib.UserAuthentication;
 import net.minecraft.client.util.Session;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 import com.mojang.authlib.yggdrasil.YggdrasilUserAuthentication;
@@ -7,6 +8,8 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.util.UUIDTypeAdapter;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.Agent;
+import org.apache.commons.lang3.StringUtils;
+
 import java.net.Proxy;
 
 // Thanks to Jordin / Energetic
@@ -15,7 +18,7 @@ public class AccountUtil {
     private static final YggdrasilAuthenticationService ygg = new YggdrasilAuthenticationService(Proxy.NO_PROXY, "");
 
     public static Session createSession(String username, String password) throws AuthenticationException {
-        YggdrasilUserAuthentication yggdrasilUserAuthentication = constructUserAuthentication(username, password);
+        UserAuthentication yggdrasilUserAuthentication = constructUserAuthentication(username, password);
 
         yggdrasilUserAuthentication.logIn();
 
@@ -26,14 +29,16 @@ public class AccountUtil {
         );
     }
 
-    private static YggdrasilUserAuthentication constructUserAuthentication(String username, String password) {
-        YggdrasilUserAuthentication yggdrasilUserAuthentication = new YggdrasilUserAuthentication(AccountUtil.ygg,
-                Agent.MINECRAFT);
+    private static UserAuthentication constructUserAuthentication(String username, String password) {
+//        YggdrasilUserAuthentication yggdrasilUserAuthentication = new YggdrasilUserAuthentication(AccountUtil.ygg,
+//                Agent.MINECRAFT);
+        final YggdrasilAuthenticationService yggdrasilUserAuthentication = new YggdrasilAuthenticationService(Proxy.NO_PROXY, StringUtils.EMPTY);
+        final UserAuthentication userAuthentication = yggdrasilUserAuthentication.createUserAuthentication(Agent.MINECRAFT);
 
-        yggdrasilUserAuthentication.setUsername(username);
-        yggdrasilUserAuthentication.setPassword(password);
+        userAuthentication.setUsername(username);
+        userAuthentication.setPassword(password);
 
-        return yggdrasilUserAuthentication;
+        return userAuthentication;
     }
 
 }

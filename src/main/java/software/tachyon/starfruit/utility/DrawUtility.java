@@ -8,21 +8,34 @@ import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.BufferRenderer;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormats;
-import net.minecraft.client.util.math.Matrix4f;
-import net.minecraft.client.util.math.Rotation3;
+import net.minecraft.client.util.math.AffineTransformation;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.math.Matrix4f;
+import net.minecraft.text.OrderedText;
 
 public class DrawUtility {
-    public static void drawCenteredString(TextRenderer textRenderer, String str, double centerX, double y, int color) {
-        textRenderer.drawWithShadow(str, (float) (centerX - textRenderer.getStringWidth(str) / 2), (float) y, color);
+    public static void drawCenteredString(MatrixStack matrices, TextRenderer textRenderer, String str, double centerX, double y, int color) {
+        textRenderer.drawWithShadow(matrices, str, (float) (centerX - textRenderer.getWidth(str) / 2), (float) y, color);
     }
 
-    public static void drawRightAlignedString(TextRenderer textRenderer, String str, double rightX, double y,
+    public static final String asString(final OrderedText orderedText) {
+        final StringBuilder builder = new StringBuilder();
+
+        orderedText.accept((index, style, codePoint) -> {
+            builder.append(Character.toChars(codePoint));
+            return true;
+        });
+
+        return builder.toString();
+    }
+
+    public static void drawRightAlignedString(MatrixStack matrices, TextRenderer textRenderer, String str, double rightX, double y,
             int color) {
-        textRenderer.drawWithShadow(str, (float) (rightX - textRenderer.getStringWidth(str)), (float) y, color);
+        textRenderer.drawWithShadow(matrices, str, (float) (rightX - textRenderer.getWidth(str)), (float) y, color);
     }
 
     public static void fill(double x1, double y1, double x2, double y2, int color) {
-        fill(Rotation3.identity().getMatrix(), x1, y1, x2, y2, color);
+        fill(AffineTransformation.identity().getMatrix(), x1, y1, x2, y2, color);
     }
 
     public static void fill(Matrix4f matrix4f, double x1, double y1, double x2, double y2, int color) {

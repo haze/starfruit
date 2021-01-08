@@ -7,6 +7,7 @@ import net.minecraft.client.gui.hud.BossBarHud;
 import net.minecraft.client.gui.hud.ClientBossBar;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.sound.SoundEntry;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.boss.BossBar;
 import software.tachyon.starfruit.StarfruitMod;
 import software.tachyon.starfruit.module.ModuleInfo;
@@ -26,6 +27,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import software.tachyon.starfruit.utility.DrawUtility;
 
 import java.awt.Color;
 
@@ -40,27 +42,27 @@ public abstract class InGameGUIMixin extends DrawableHelper {
   private MinecraftClient client;
 
   @Inject(method = "render", at = @At("HEAD"))
-  public void renderPre(float partialTicks, CallbackInfo ci) {
+  public void renderPre(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
     final MBassador<Event> bus = StarfruitMod.getModuleManager().getBus();
-    bus.post(new InGameHudDrawEvent(InGameHudDrawEvent.State.PRE, (double) partialTicks)).now();
+    bus.post(new InGameHudDrawEvent(InGameHudDrawEvent.State.PRE, matrices, (double) tickDelta)).now();
   }
 
   @Inject(method = "render", at = @At("RETURN"))
-  public void renderPost(float partialTicks, CallbackInfo ci) {
+  public void renderPost(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
     final MBassador<Event> bus = StarfruitMod.getModuleManager().getBus();
     final boolean shouldDraw = !this.client.options.hudHidden && !this.client.options.debugEnabled;
-    bus.post(new InGameHudDrawEvent(InGameHudDrawEvent.State.POST, (double) partialTicks)).now();
+    bus.post(new InGameHudDrawEvent(InGameHudDrawEvent.State.POST, matrices, (double) tickDelta)).now();
     if (shouldDraw) {
-      this.drawModules();
+      this.drawModules(matrices);
     }
   }
 
-  void drawModules() {
+  void drawModules(MatrixStack stack) {
     double y = isBossBarConflictingWithModules().orElse(START_Y);
     final Iterator<StatefulModule> iter = StarfruitMod.getModuleManager().getDisplay().iterator();
     while (iter.hasNext()) {
       final ModuleInfo info = iter.next().getInfo();
-      drawStringWithShadow(info.name, START_X, y, info.color, 0.5F);
+      drawStringWithShadow(stack, info.name, START_X, y, info.color, 0.5F);
       y += this.client.textRenderer.fontHeight + MODULE_PADDING;
     }
   }
@@ -77,7 +79,7 @@ public abstract class InGameGUIMixin extends DrawableHelper {
 
     if (firstModule != null && bossBarExists) {
       final String longestModuleName = firstModule.getInfo().name;
-      final double moduleEndX = START_X + this.client.textRenderer.getStringWidth(longestModuleName);
+      final double moduleEndX = START_X + this.client.textRenderer.getWidth(longestModuleName);
 
       int lastConflictingBossBarIndex = 0;
       int bossBarIdx = 0;
@@ -87,8 +89,8 @@ public abstract class InGameGUIMixin extends DrawableHelper {
       final double minecraftMiddleX = this.client.getWindow().getScaledWidth() / 2.0;
 
       for (final Map.Entry<UUID, ClientBossBar> entry : bossBars) {
-        final String bossBarText = entry.getValue().getName().asFormattedString();
-        final int bossBarTextWidth = this.client.textRenderer.getStringWidth(bossBarText);
+        final String bossBarText = DrawUtility.asString(entry.getValue().getName().asOrderedText());
+        final int bossBarTextWidth = this.client.textRenderer.getWidth((bossBarText));
         if (moduleEndX >= (minecraftMiddleX - (bossBarTextWidth / 2))) {
           lastConflictingBossBarIndex = bossBarIdx + 1;
         }
@@ -103,9 +105,9 @@ public abstract class InGameGUIMixin extends DrawableHelper {
     return Optional.empty();
   }
 
-  void drawStringWithShadow(String text, double x, double y, Color color, double shadowDist) {
+  void drawStringWithShadow(MatrixStack stack, String text, double x, double y, Color color, double shadowDist) {
     final Color shadowColor = color.darker().darker();
-    this.client.textRenderer.draw(text, (float) (x + shadowDist), (float) (y + shadowDist), shadowColor.getRGB());
-    this.client.textRenderer.draw(text, (float) x, (float) y, color.getRGB());
+    this.client.textRenderer.draw(stack, text, (float) (x + shadowDist), (float) (y + shadowDist), shadowColor.getRGB());
+    this.client.textRenderer.draw(stack, text, (float) x, (float) y, color.getRGB());
   }
 }

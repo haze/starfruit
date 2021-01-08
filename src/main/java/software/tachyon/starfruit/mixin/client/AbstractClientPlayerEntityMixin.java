@@ -18,7 +18,7 @@ import software.tachyon.starfruit.module.render.Camera;
 public abstract class AbstractClientPlayerEntityMixin extends PlayerEntity {
 
     protected AbstractClientPlayerEntityMixin() {
-        super(null, null);
+        super(null, null, 0, null);
         throw new UnsupportedOperationException();
     }
 

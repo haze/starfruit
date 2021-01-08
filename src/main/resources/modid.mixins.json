@@ -22,8 +22,8 @@
     "world.GameRendererMixin",
     "world.WorldRendererMixin",
     "network.ClientPlayNetworkHandlerMixin",
-    "network.EntityVelocityUpdateS2CPacketMixin",
     "network.NetworkThreadUtilsMixin",
+    "network.EntityVelocityUpdateS2CPacketMixin",
     "network.InventoryS2CPacketMixin",
     "network.PlayerMoveC2SPacketMixin",
     "network.GuiSlotUpdateS2CPacketMixin"
