@@ -1,7 +1,5 @@
 package software.tachyon.starfruit.utility;
 
-import software.tachyon.starfruit.StarfruitMod;
-
 import java.awt.*;
 import java.util.Optional;
 
@@ -23,7 +21,8 @@ public class HexShift {
     }
 
     public static String colorizeLiteral(String input, String color) {
-        return CATALYST_CHAR + color + input + StarfruitMod.COLOR_SEPARATOR + "r";
+        return input;
+//        return CATALYST_CHAR + color + input + StarfruitMod.COLOR_SEPARATOR + "r";
     }
 
     // Transforms "\u0666XXXXXX" to a shifted color

@@ -13,7 +13,9 @@ public class ModuleInfo {
     private final String colorHex;
 
     public String hexDisplayString() {
-        return String.format("%c%s%s%cr", '\u0666', this.colorHex, this.name, StarfruitMod.COLOR_SEPARATOR);
+        return this.name;
+        // why was this not using the CATALYST_CHAR constant?
+        // return String.format("%c%s%s%cr", '\u0666', this.colorHex, this.name, StarfruitMod.COLOR_SEPARATOR);
     }
 
     public boolean isHidden() {

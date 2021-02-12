@@ -10,6 +10,7 @@
     "client.AbstractClientPlayerEntityMixin",
     "gui.BossBarHudMixin",
     "gui.BossBarHudMixinInterface",
+    "gui.ChatHudMixin",
     "gui.ChatScreenInterfaceMixin",
     "gui.InGameGUIMixin",
     "gui.TitleScreenMixin",

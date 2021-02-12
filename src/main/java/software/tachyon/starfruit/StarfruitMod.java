@@ -4,11 +4,13 @@ import net.fabricmc.api.ModInitializer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.network.MessageType;
 import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 import org.apache.commons.lang3.StringUtils;
 import software.tachyon.starfruit.mixin.client.MinecraftClientInterfaceMixin;
 import software.tachyon.starfruit.module.ModuleManager;
 import software.tachyon.starfruit.utility.AccountUtil;
+import software.tachyon.starfruit.utility.GlobalIridenscencePrefixedText;
 import software.tachyon.starfruit.utility.HexShift;
 
 import java.awt.*;
@@ -106,7 +108,7 @@ public class StarfruitMod implements ModInitializer {
 
     // static Color friendColor = null;
     public static Color getFriendColor() {
-      return StarfruitMod.getGlobalIridescence();
+      return new Color(StarfruitMod.getGlobalIridescence());
       // if (Friends.friendColor == null)
       // Friends.friendColor = new Color(50, 255, 185);
       // return Friends.friendColor;
@@ -181,19 +183,20 @@ public class StarfruitMod implements ModInitializer {
   final static float iridescenceSaturation = 0.4F;
   final static float iridescenceBrightness = 1F;
 
-  public static Color getGlobalIridescence() {
+  public static int getGlobalIridescence() {
     final float hue = (System.currentTimeMillis() / 8) % 360;
-    return Color.getHSBColor(hue / 360, iridescenceSaturation, iridescenceBrightness);
+    return Color.HSBtoRGB(hue / 360, iridescenceSaturation, iridescenceBrightness);
   }
 
   public static void info(String format, Object... items) {
     consoleInfo(format, items);
 
-    final String formatted = String.format("%cFFB972Starfruit%cr %s", HexShift.CATALYST_CHAR,
-        COLOR_SEPARATOR, String.format(format, items));
+    Text formatted = new GlobalIridenscencePrefixedText("Starfruit ", new LiteralText(String.format(format, items)));
+
+    // formatted = new GlobalIridenscencePrefixedText("Starfruit ", new LiteralText("A B C D E F G H I J K L M N O P Q R S T U V W X Y Z A B C D E F G H I J K L M N O P Q R S T U V W X Y Z"));
 
     if (minecraft.inGameHud != null)
-      minecraft.inGameHud.addChatMessage(MessageType.SYSTEM, new LiteralText(formatted), Util.NIL_UUID);
+      minecraft.inGameHud.addChatMessage(MessageType.SYSTEM, formatted, Util.NIL_UUID);
   }
 
   public static void consoleInfo(String format, Object... items) {
@@ -203,7 +206,7 @@ public class StarfruitMod implements ModInitializer {
   }
 
   // attemptDirectLogin tries to login given a minecraft account
-  // specified in $HOME/.secret/minecraft for easy access to a session
+  // specified in $HOME/.secret/.minecraft for easy access to a session
   // during development
   private void attemptDirectLogin() {
     if (DEV_ACCOUNT_FILE.exists()) {
