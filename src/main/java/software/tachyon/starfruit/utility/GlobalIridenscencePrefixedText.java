@@ -5,7 +5,6 @@ import net.minecraft.text.*;
 import org.apache.commons.lang3.mutable.MutableInt;
 import software.tachyon.starfruit.StarfruitMod;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,14 +17,6 @@ public final class GlobalIridenscencePrefixedText implements Text {
         this.prefixStr = prefixStr;
         this.underlying = underlying;
         this.prefix = (visitor -> TextVisitFactory.visitFormatted(this.prefixStr, Style.EMPTY.withColor(TextColor.fromRgb(StarfruitMod.getGlobalIridescence())), visitor));
-    }
-
-    public final String getPrefixStr() {
-        return this.prefixStr;
-    }
-
-    public final OrderedText getPrefix() {
-        return this.prefix;
     }
 
     @Override
@@ -53,32 +44,30 @@ public final class GlobalIridenscencePrefixedText implements Text {
         return this.underlying.shallowCopy();
     }
 
-    public void mutate(final List<OrderedText> input) {
-        final int prefixLen = this.prefixStr.length();
+    private static OrderedText mergeConcat(final OrderedText start, final int startLength, final OrderedText end) {
+        return visitor -> {
+            final MutableInt absoluteIndex = new MutableInt();
 
+            return start.accept(visitor) && end.accept((index, style, codePoint) -> {
+                // System.out.println(absoluteIndex.getValue() + " " + index + " " + Arrays.toString(Character.toChars(codePoint)));
+
+                if (absoluteIndex.getAndIncrement() < startLength) {
+                    return true;
+                }
+
+                return visitor.accept(index, style, codePoint);
+            });
+        };
+    }
+
+    public void mutate(final List<OrderedText> input) {
         // would this ever occur?
         if (input.isEmpty() || input.get(0) == OrderedText.EMPTY) {
             input.clear();
             input.add(this.prefix);
         } else {
             final OrderedText original = input.remove(0);
-            final MutableInt absoluteIndex = new MutableInt();
-            final int originalLength = StarfruitMod.getLength(original);
-
-            final OrderedText originalSubstring = visitor -> original.accept((index, style, codePoint) -> {
-                if (absoluteIndex.intValue() >= originalLength) {
-                    absoluteIndex.setValue(0);
-                }
-
-                System.out.println(absoluteIndex.getValue()+ " " + index + " " + Arrays.toString(Character.toChars(codePoint)));
-
-                if (absoluteIndex.getAndIncrement() < prefixLen) {
-                    return true;
-                }
-
-                return visitor.accept(index, style, codePoint);
-            });
-            input.add(0, OrderedText.concat(this.prefix, originalSubstring));
+            input.add(0, mergeConcat(this.prefix, this.prefixStr.length(), original));
         }
     }
 
