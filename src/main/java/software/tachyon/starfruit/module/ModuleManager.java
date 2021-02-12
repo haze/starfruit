@@ -14,6 +14,8 @@ import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.network.listener.ServerPlayPacketListener;
 import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Style;
 import software.tachyon.starfruit.StarfruitMod;
 import software.tachyon.starfruit.command.Parser;
 import software.tachyon.starfruit.mixin.gui.ChatScreenInterfaceMixin;
@@ -38,12 +40,9 @@ import software.tachyon.starfruit.utility.DrawUtility;
 import software.tachyon.starfruit.utility.GLFWKeyMapping;
 import software.tachyon.starfruit.utility.HexShift;
 
-import java.awt.*;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
-import java.util.List;
-import java.util.Queue;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -51,6 +50,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static org.lwjgl.glfw.GLFW.*;
+import static software.tachyon.starfruit.utility.StarfruitTextFactory.throwable;
+import static software.tachyon.starfruit.utility.TextFactory.*;
 
 // TODO(haze): Redesign 'setBind' to be more ergonomic (if need be)
 // TODO(haze): KillAura, BlockESP, FastPlace, AutoRespawn, Speedmine, AutoArmor,
@@ -347,7 +348,7 @@ public class ModuleManager {
             final Map<String, Variable<?>> modVariableCache = this.variableCache.get(mod);
             Variable<?> variable = null;
             if (!result.selector.isPresent()) {
-                StarfruitMod.info("No variable name provided");
+                StarfruitMod.info(text("No variable name provided"));
                 return;
             }
             final List<ExtractedResult> fuzzedVariables =
@@ -358,8 +359,11 @@ public class ModuleManager {
                     return;
                 } else {
                     if (modVariableCache == null) {
-                        StarfruitMod.info("%s has no configurable variables",
-                                mod.getInfo().hexDisplayString());
+                        StarfruitMod.info(join(
+                                mod.getInfo().displayText(),
+                                text(" has no configurable variables")
+                        ));
+
                         return;
                     }
                     variable =
@@ -368,8 +372,10 @@ public class ModuleManager {
             }
 
             if (variable == null) {
-                StarfruitMod.info("%s does not have variable %s", mod.getInfo().hexDisplayString(),
-                        result.selector.get());
+                StarfruitMod.info(join(
+                        mod.getInfo().displayText(),
+                        text("does not have variable " + result.selector.get())
+                ));
                 return;
             }
 
@@ -382,13 +388,18 @@ public class ModuleManager {
             final boolean isString = variableType.isAssignableFrom(String.class);
 
             final String output, oldValueDisplay;
+            final Style outputStyle;
 
             final String varRef = HexShift.colorizeLiteral(
                     variable.getName().orElse(result.selector.orElse("???")), grayColor);
 
-            if (!result.value.isPresent()) {
-                StarfruitMod.info("%s %s is %s", mod.getInfo().hexDisplayString(), varRef,
-                        variable.getDisplay());
+            if (result.value.isEmpty()) {
+                StarfruitMod.info(join(
+                        mod.getInfo().displayText(),
+                        text(varRef),
+                        text("is"),
+                        text(variable.getDisplay()).setStyle(variable.getStyle())
+                ));
                 return;
             } else {
                 final Object value = result.value.get();
@@ -397,6 +408,7 @@ public class ModuleManager {
                     oldValueDisplay = typedVar.getDisplay();
                     typedVar.set((Integer) value);
                     output = typedVar.getDisplay();
+                    outputStyle = typedVar.getStyle();
                 } else if (isDouble) {
                     final Variable.Dbl typedVar = (Variable.Dbl) variable;
                     oldValueDisplay = typedVar.getDisplay();
@@ -405,18 +417,21 @@ public class ModuleManager {
                                     : (Double) value;
                     typedVar.set(newValue);
                     output = typedVar.getDisplay();
+                    outputStyle = typedVar.getStyle();
                 } else if (isBoolean) {
                     final Variable.Bool typedVar = (Variable.Bool) variable;
                     oldValueDisplay = typedVar.getDisplay();
                     typedVar.set((Boolean) value);
                     output = typedVar.getDisplay();
+                    outputStyle = typedVar.getStyle();
                 } else if (isString) {
                     final Variable.Str typedVar = (Variable.Str) variable;
                     oldValueDisplay = typedVar.getDisplay();
                     typedVar.set((String) value);
                     output = typedVar.getDisplay();
+                    outputStyle = typedVar.getStyle();
                 } else {
-                    StarfruitMod.info("\"%s\" could not be parsed as a proper value", result.value);
+                    StarfruitMod.info(text("\"" + result.value + "\" could not be parsed as a proper value"));
                     return;
                 }
             }
@@ -424,16 +439,18 @@ public class ModuleManager {
             try {
                 this.saveModuleSettings(this.saveFile);
             } catch (IOException e) {
-                StarfruitMod.info("Failed to save to file: %s",
-                        HexShift.colorizeLiteral(e.getMessage(), grayColor));
+                StarfruitMod.info(join(red("Failed to save to file:"), throwable(e)));
             }
 
-            final String end = HexShift.colorizeLiteral(")", grayColor);
-            final String oldValue = HexShift.colorize(oldValueDisplay, Color.WHITE);
-            final String wasText =
-                    HexShift.colorizeLiteral(String.format("(was %s%s", oldValue, end), grayColor);
-            StarfruitMod.info("%s %s is %s %s", mod.getInfo().hexDisplayString(), varRef, output,
-                    wasText);
+            StarfruitMod.info(join(
+                    mod.getInfo().displayText(),
+                    text(varRef),
+                    text("is"),
+                    text(output).setStyle(outputStyle),
+                    gray("(was "),
+                    white(oldValueDisplay),
+                    gray(")")
+            ));
         } catch (Throwable t) {
             t.printStackTrace();
         }
@@ -461,7 +478,7 @@ public class ModuleManager {
                     mod = this.moduleNameCache.get(fuzzedModules.get(0).getString().toLowerCase());
 
                 if (mod == null) {
-                    StarfruitMod.info("No module named %s found", result.command);
+                    StarfruitMod.info(text("No module named " + result.command + " found"));
                     return;
                 }
 
@@ -472,8 +489,11 @@ public class ModuleManager {
                     System.out.println("cusdfkasdfj");
                     this.setModuleState(mod, !mod.getState(), true);
                     if (mod.getInfo().isHidden())
-                        StarfruitMod.info("%s is %s", mod.getInfo().hexDisplayString(),
-                                Variable.Bool.displayGiven(mod.getState()));
+                        StarfruitMod.info(join(
+                                mod.getInfo().displayText(),
+                                text("is"),
+                                Variable.Bool.displayGiven(mod.getState())
+                        ));
                 } else {
                     changeModVariable(mod, result);
                 }
@@ -487,14 +507,18 @@ public class ModuleManager {
     // .friend Jordin -- toggle
     void onFriendCommand(Parser.Result result) {
         if (!result.selector.isPresent()) {
-            StarfruitMod.info("No username provided");
+            StarfruitMod.info(text("No username provided"));
             return;
         }
         final String username = result.selector.get();
         final String alias = (String) result.value.orElse(username);
         final Optional<PlayerListEntry> optionalPlayer = this.lookupUser(username);
         if (!optionalPlayer.isPresent()) {
-            StarfruitMod.info("Player %s not found", HexShift.colorizeLiteral(username, grayColor));
+            StarfruitMod.info(join(
+                text("Player"),
+                gray(username),
+                text("not found")
+            ));
             return;
         }
         final PlayerListEntry player = optionalPlayer.get();
@@ -503,13 +527,13 @@ public class ModuleManager {
         try {
             if (friends.isFriend(uuid)) {
                 friends.removeFriend(uuid);
-                StarfruitMod.info("No longer friendly towards %s", username);
+                StarfruitMod.info(text("No longer friendly towards " + username));
             } else {
                 friends.addFriend(uuid, player.getProfile().getName(), alias);
-                StarfruitMod.info("Now friendly towards %s", username);
+                StarfruitMod.info(text("Now friendly towards " + username));
             }
         } catch (IOException e) {
-            StarfruitMod.info("Failed to save friends file: %s", e.getMessage());
+            StarfruitMod.info(join(red("Failed to save friends file:"), throwable(e)));
         }
     }
 
@@ -524,7 +548,7 @@ public class ModuleManager {
 
     void onBindCommand(StatefulModule mod, Parser.Result result) {
         if (!result.value.isPresent()) {
-            StarfruitMod.info("No bind provided");
+            StarfruitMod.info(text("No bind provided"));
             return;
         }
         final String key = result.value.get().toString().toUpperCase();
@@ -534,15 +558,24 @@ public class ModuleManager {
         try {
             if (maybeKey != null) {
                 final Optional<StatefulModule> replaced = this.setBindAndSave(mod, maybeKey);
-                final String replacementNotification =
-                        replaced.isPresent()
-                                ? String.format(" (unbound %s)",
-                                        replaced.get().getInfo().hexDisplayString())
-                                : "";
-                StarfruitMod.info("%s bind is now %s%s", mod.getInfo().hexDisplayString(), newBind,
-                        replacementNotification);
+
+                final List<MutableText> bindMessage = new ArrayList<>(3 + 3);
+                bindMessage.add(mod.getInfo().displayText());
+                bindMessage.add(text(" bind is now "));
+                bindMessage.add(gray(newBind));
+
+                replaced.ifPresent(rep -> {
+                    bindMessage.add(text(" (unbound"));
+                    bindMessage.add(rep.getInfo().displayText());
+                    bindMessage.add(text(")"));
+                });
+
+                StarfruitMod.info(concat(bindMessage));
             } else {
-                StarfruitMod.info("No key found for %s", newBind);
+                StarfruitMod.info(join(
+                        text("No key found for"),
+                        gray(newBind)
+                ));
             }
         } catch (Throwable t) {
             // TODO(haze): inspect
@@ -571,8 +604,7 @@ public class ModuleManager {
                 this.saveModuleSettings(this.saveFile);
                 System.out.println("Saved...");
             } catch (Exception e) {
-                final String error = HexShift.colorizeLiteral(e.getMessage(), grayColor);
-                StarfruitMod.info("Failed to save module settings file: %s", error);
+                StarfruitMod.info(join(red("Failed to save module settings file:"), throwable(e)));
                 e.printStackTrace();
             }
         }

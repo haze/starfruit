@@ -1,8 +1,12 @@
 package software.tachyon.starfruit.module;
 
+import net.minecraft.text.MutableText;
 import software.tachyon.starfruit.StarfruitMod;
 
 import java.awt.*;
+
+import static software.tachyon.starfruit.utility.TextFactory.PLAIN;
+import static software.tachyon.starfruit.utility.TextFactory.text;
 
 public class ModuleInfo {
 
@@ -12,8 +16,9 @@ public class ModuleInfo {
     private final boolean hidden;
     private final String colorHex;
 
-    public String hexDisplayString() {
-        return this.name;
+    public MutableText displayText() {
+        // should we cache this?
+        return text(this.name, PLAIN, this.color.getRGB() | 0xFF000000);
         // why was this not using the CATALYST_CHAR constant?
         // return String.format("%c%s%s%cr", '\u0666', this.colorHex, this.name, StarfruitMod.COLOR_SEPARATOR);
     }

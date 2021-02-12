@@ -2,8 +2,10 @@ package software.tachyon.starfruit.utility;
 
 import net.minecraft.client.font.TextVisitFactory;
 import net.minecraft.text.*;
+import org.apache.commons.lang3.mutable.MutableInt;
 import software.tachyon.starfruit.StarfruitMod;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,6 +51,35 @@ public final class GlobalIridenscencePrefixedText implements Text {
     @Override
     public MutableText shallowCopy() {
         return this.underlying.shallowCopy();
+    }
+
+    public void mutate(final List<OrderedText> input) {
+        final int prefixLen = this.prefixStr.length();
+
+        // would this ever occur?
+        if (input.isEmpty() || input.get(0) == OrderedText.EMPTY) {
+            input.clear();
+            input.add(this.prefix);
+        } else {
+            final OrderedText original = input.remove(0);
+            final MutableInt absoluteIndex = new MutableInt();
+            final int originalLength = StarfruitMod.getLength(original);
+
+            final OrderedText originalSubstring = visitor -> original.accept((index, style, codePoint) -> {
+                if (absoluteIndex.intValue() >= originalLength) {
+                    absoluteIndex.setValue(0);
+                }
+
+                System.out.println(absoluteIndex.getValue()+ " " + index + " " + Arrays.toString(Character.toChars(codePoint)));
+
+                if (absoluteIndex.getAndIncrement() < prefixLen) {
+                    return true;
+                }
+
+                return visitor.accept(index, style, codePoint);
+            });
+            input.add(0, OrderedText.concat(this.prefix, originalSubstring));
+        }
     }
 
     // FIXME: are these required?

@@ -3,10 +3,12 @@ package software.tachyon.starfruit;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.network.MessageType;
-import net.minecraft.text.LiteralText;
+import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.mutable.MutableInt;
+import org.jetbrains.annotations.NotNull;
 import software.tachyon.starfruit.mixin.client.MinecraftClientInterfaceMixin;
 import software.tachyon.starfruit.module.ModuleManager;
 import software.tachyon.starfruit.utility.AccountUtil;
@@ -20,6 +22,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.*;
+
+import static software.tachyon.starfruit.utility.TextFactory.text;
 
 public class StarfruitMod implements ModInitializer {
 
@@ -188,15 +192,35 @@ public class StarfruitMod implements ModInitializer {
     return Color.HSBtoRGB(hue / 360, iridescenceSaturation, iridescenceBrightness);
   }
 
-  public static void info(String format, Object... items) {
-    consoleInfo(format, items);
+  public static void info(final Text text) {
+    consoleInfo(asString(text.asOrderedText()));
 
-    Text formatted = new GlobalIridenscencePrefixedText("Starfruit ", new LiteralText(String.format(format, items)));
-
-    // formatted = new GlobalIridenscencePrefixedText("Starfruit ", new LiteralText("A B C D E F G H I J K L M N O P Q R S T U V W X Y Z A B C D E F G H I J K L M N O P Q R S T U V W X Y Z"));
+    final Text formatted = new GlobalIridenscencePrefixedText("Starfruit ", text);
 
     if (minecraft.inGameHud != null)
       minecraft.inGameHud.addChatMessage(MessageType.SYSTEM, formatted, Util.NIL_UUID);
+  }
+
+  public static @NotNull String asString(final @NotNull OrderedText orderedText) {
+    final StringBuilder builder = new StringBuilder();
+
+    orderedText.accept((index, style, codePoint) -> {
+      builder.append(Character.toChars(codePoint));
+      return true;
+    });
+
+    return builder.toString();
+  }
+
+  public static int getLength(final @NotNull OrderedText orderedText) {
+    final MutableInt length = new MutableInt();
+
+    orderedText.accept((index, style, codePoint) -> {
+      length.add(Character.charCount(codePoint));
+      return true;
+    });
+
+    return length.intValue();
   }
 
   public static void consoleInfo(String format, Object... items) {
@@ -255,6 +279,6 @@ public class StarfruitMod implements ModInitializer {
       ignored.printStackTrace();
     }
     registerShutdownHook();
-    info("onInitialize()");
+    info(text("onInitialize()"));
   }
 }

@@ -1,12 +1,17 @@
 package software.tachyon.starfruit.module.variable;
 
 import com.google.common.collect.Streams;
-import software.tachyon.starfruit.StarfruitMod;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Style;
+import net.minecraft.util.Formatting;
 
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static software.tachyon.starfruit.utility.TextFactory.green;
+import static software.tachyon.starfruit.utility.TextFactory.red;
 
 public abstract class Variable<T> {
     private final T initial;
@@ -34,13 +39,20 @@ public abstract class Variable<T> {
     }
 
     public static class Bool extends Variable<Boolean> {
-        public static String displayGiven(Boolean state) {
-            return state ? StarfruitMod.Colors.colorize("on", 'a')
-                    : StarfruitMod.Colors.colorize("off", 'c');
+        public static MutableText displayGiven(Boolean state) {
+            return state ? green("on") : red("off");
         }
 
         public String getDisplay() {
-            return Bool.displayGiven(this.get());
+            return this.get() ? "on" : "off";
+        }
+
+        public static Style getStyle(Boolean state) {
+            return Style.EMPTY.withColor(state ? Formatting.GREEN : Formatting.RED);
+        }
+
+        public Style getStyle() {
+            return Bool.getStyle(this.get());
         }
 
         static final String[] yesPatterns = new String[] {"y", "yes", "on",};
@@ -83,6 +95,10 @@ public abstract class Variable<T> {
     }
 
     public abstract String getDisplay();
+
+    public Style getStyle() {
+        return Style.EMPTY;
+    }
 
     public void set(T newValue) {
         this.value = newValue;

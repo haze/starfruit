@@ -20,27 +20,10 @@ public abstract class ChatHudMixin {
 
         if (stringVisitable instanceof GlobalIridenscencePrefixedText) {
             final GlobalIridenscencePrefixedText globalIridenscencePrefixedText = (GlobalIridenscencePrefixedText) stringVisitable;
-            final OrderedText prefix = globalIridenscencePrefixedText.getPrefix();
-            final int prefixLen = globalIridenscencePrefixedText.getPrefixStr().length();
 
-            // would this ever occur?
-            if (result.isEmpty() || result.get(0) == OrderedText.EMPTY) {
-                result.add(prefix);
-            } else {
-                final OrderedText original = result.remove(0);
-                final OrderedText originalSubstring = visitor -> original.accept((index, style, codePoint) -> {
-                    if (index < prefixLen) {
-                        return true;
-                    }
-
-                    return visitor.accept(index, style, codePoint);
-                });
-                result.add(0, OrderedText.concat(prefix, originalSubstring));
-            }
-
-            return result;
+            globalIridenscencePrefixedText.mutate(result);
         }
 
-        return ChatMessages.breakRenderedChatMessageLines(stringVisitable, width, textRenderer);
+        return result;
     }
 }

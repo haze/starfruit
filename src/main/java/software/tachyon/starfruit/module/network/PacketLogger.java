@@ -19,6 +19,10 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.StringJoiner;
 
+import static software.tachyon.starfruit.utility.StarfruitTextFactory.file;
+import static software.tachyon.starfruit.utility.StarfruitTextFactory.throwable;
+import static software.tachyon.starfruit.utility.TextFactory.*;
+
 public class PacketLogger extends StatefulModule {
     class LoggedPacket {
         final String packetName;
@@ -113,10 +117,13 @@ public class PacketLogger extends StatefulModule {
         try {
             final int packetCount = this.log.size();
             final File savedFile = this.flush();
-            StarfruitMod.info("Saved %d packets to %s", packetCount, savedFile.getName());
+            StarfruitMod.info(join(
+                    text("Saved " + packetCount + " packets to"),
+                    file(savedFile)
+            ));
         } catch (IOException e) {
             e.printStackTrace();
-            StarfruitMod.info("Failed to save packet log: %s", e.getMessage());
+            StarfruitMod.info(join(red("Failed to save packet log:"), throwable(e)));
         }
         super.onDisable();
     }
