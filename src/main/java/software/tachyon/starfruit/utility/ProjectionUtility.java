@@ -5,9 +5,9 @@ import net.minecraft.client.util.GlAllocationUtils;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.util.math.Vector3d;
-import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.Vec3f;
 import software.tachyon.starfruit.StarfruitMod;
 
 import java.nio.FloatBuffer;
@@ -110,20 +110,20 @@ public final class ProjectionUtility {
         return true;
     }
 
-    public static Optional<Vector3f> project(Vector3d vec, boolean allowOffScreen) {
+    public static Optional<Vec3f> project(Vector3d vec, boolean allowOffScreen) {
         return project(vec.x, vec.y, vec.z, allowOffScreen);
     }
 
-    public static Optional<Vector3f> project(Vec3d vec, boolean allowOffScreen) {
+    public static Optional<Vec3f> project(Vec3d vec, boolean allowOffScreen) {
         return project(vec.x, vec.y, vec.z, allowOffScreen);
     }
 
-    public static Optional<Vector3f> project(Vector3f vec, boolean allowOffScreen) {
-        return project((double) vec.getX(), (double) vec.getY(), (double) vec.getZ(), allowOffScreen);
+    public static Optional<Vec3f> project(Vec3f vec, boolean allowOffScreen) {
+        return project(vec.getX(), vec.getY(), vec.getZ(), allowOffScreen);
     }
 
-    public static Optional<Vector3f> project(double x, double y, double z, boolean allowOffScreen) {
-        final Vector3f out = new Vector3f(-1, -1, -1);
+    public static Optional<Vec3f> project(double x, double y, double z, boolean allowOffScreen) {
+        final Vec3f out = new Vec3f(-1, -1, -1);
         gluProject((float) (x - cameraX), (float) (y - cameraY), (float) (z - cameraZ), MODELVIEW, PROJECTION, VIEWPORT,
                 SCREEN_COORDS);
         out.set(SCREEN_COORDS.get(SCREEN_COORDS_X_INDEX), SCREEN_COORDS.get(SCREEN_COORDS_Y_INDEX),

@@ -141,7 +141,7 @@ public class AutoArmor extends StatefulModule {
   }
 
   boolean beats(int checkSlot, Type type, ItemStack with) {
-    final ItemStack residing = StarfruitMod.minecraft.player.inventory.getArmorStack(checkSlot);
+    final ItemStack residing = StarfruitMod.minecraft.player.getInventory().getArmorStack(checkSlot);
     if (residing.getItem() == AIR)
       return true;
     // can only have armor equipped
@@ -203,14 +203,14 @@ public class AutoArmor extends StatefulModule {
     System.out.println("AutoArmor.equip()");
     final ClientPlayerEntity player = StarfruitMod.minecraft.player;
     final ClientPlayNetworkHandler netHandler = StarfruitMod.minecraft.getNetworkHandler();
-    short s = player.currentScreenHandler.getNextActionId(player.inventory);
+    short s = player.currentScreenHandler.getNextActionId(player.getInventory());
     if (!isInAcceptableInventory()) {
       // move item to player inv
       this.quickMoveSlot(from);
       // this.moveToPlayerInventory(from);
     } else {
       // (picked up / given), swap rn
-      if (player.inventory.getArmorStack(armorItemStackIndex).getItem() == AIR) {
+      if (player.getInventory().getArmorStack(armorItemStackIndex).getItem() == AIR) {
         equipDirect(stack, from);
       } else {
         equipSwap(from, to);

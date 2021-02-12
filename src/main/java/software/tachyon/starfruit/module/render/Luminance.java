@@ -47,8 +47,8 @@ public class Luminance extends StatefulModule {
             if (Math.max(this.transitionTimeMS.get(), 0) == 0) {
                 // is the logic here a bit too complex? itll run either but not both
                 if (!this.desiredLightmapValue.isPresent()) {
-                    for (int i = 0; i < dim.getField_24767().length; i++) {
-                        dim.getField_24767()[i] = this.initialLightmap[i];
+                    for (int i = 0; i < dim.getBrightnessByLightLevel().length; i++) {
+                        dim.getBrightnessByLightLevel()[i] = this.initialLightmap[i];
                     }
                 }
                 this.desiredLightmapValue.ifPresent(value -> {
@@ -61,8 +61,8 @@ public class Luminance extends StatefulModule {
         }
 
         void setEntireLightmap(DimensionMixin dim, float to) {
-            for (int i = 0; i < dim.getField_24767().length; i++) {
-                dim.getField_24767()[i] = to;
+            for (int i = 0; i < dim.getBrightnessByLightLevel().length; i++) {
+                dim.getBrightnessByLightLevel()[i] = to;
             }
         }
 
@@ -71,7 +71,7 @@ public class Luminance extends StatefulModule {
                 final long timeDiff = System.currentTimeMillis() - this.startMS;
                 // final double eased = easeFunc(timeDiff / (double) this.transitionTimeMS);
                 final double eased = timeDiff / (double) (this.transitionTimeMS.get());
-                for (int i = 0; i < dim.getField_24767().length; i++) {
+                for (int i = 0; i < dim.getBrightnessByLightLevel().length; i++) {
                     final double newValue = this.desiredLightmapValue.isPresent()
                             ? MathHelper.lerp(eased, this.initialLightmap[i],
                                     Math.max(this.desiredLightmapValue.get(),
@@ -79,7 +79,7 @@ public class Luminance extends StatefulModule {
                             : MathHelper.lerp(eased, this.cachedLightmap[i],
                                     this.initialLightmap[i]);
                     if (!Double.isNaN(newValue)) {
-                        dim.getField_24767()[i] = (float) newValue;
+                        dim.getBrightnessByLightLevel()[i] = (float) newValue;
                     }
                 }
             }
@@ -91,7 +91,7 @@ public class Luminance extends StatefulModule {
 
         public void cacheLightmap() {
             DimensionMixin dim = ((DimensionMixin) StarfruitMod.minecraft.world.getDimension());
-            this.cachedLightmap = dim.getField_24767().clone();
+            this.cachedLightmap = dim.getBrightnessByLightLevel().clone();
         }
 
         public void setDesiredLightmapValue(Optional<Double> newValue) {
@@ -115,7 +115,7 @@ public class Luminance extends StatefulModule {
     @Override
     public void onEnable() {
         this.initialLightmap = ((DimensionMixin) StarfruitMod.minecraft.world.getDimension())
-                .getField_24767().clone();
+                .getBrightnessByLightLevel().clone();
         this.adjustLuminanceTask.setDesiredLightmapValue(Optional.of(0.25));
         if (!this.isTaskRunning())
             this.adjustLuminanceTask.setInitialLightmap(this.initialLightmap);

@@ -19,7 +19,7 @@ public abstract class AbstractClientPlayerEntityMixin extends PlayerEntity {
 
     @Inject(method = "isSpectator", at = @At("HEAD"), cancellable = true)
     public void onIsSpectator(CallbackInfoReturnable<Boolean> cir) {
-        if (this.getEntityId() == StarfruitMod.minecraft.player.getEntityId()
+        if (this.getId() == StarfruitMod.minecraft.player.getId()
                 && StarfruitMod.getModuleManager().getStatefulModule(Camera.class).getState()) {
             cir.setReturnValue(true);
         }

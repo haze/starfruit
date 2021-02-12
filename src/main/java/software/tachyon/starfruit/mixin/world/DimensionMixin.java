@@ -8,5 +8,5 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(DimensionType.class)
 public interface DimensionMixin {
     @Accessor
-    float[] getField_24767();
+    float[] getBrightnessByLightLevel();
 }

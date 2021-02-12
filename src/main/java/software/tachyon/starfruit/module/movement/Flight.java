@@ -25,8 +25,8 @@ public class Flight extends StatefulModule {
   @Override
   public void onDisable() {
     super.onDisable();
-    if (StarfruitMod.minecraft.player.abilities.flying) {
-      StarfruitMod.minecraft.player.abilities.flying = false;
+    if (StarfruitMod.minecraft.player.getAbilities().flying) {
+      StarfruitMod.minecraft.player.getAbilities().flying = false;
     }
   }
 
@@ -34,8 +34,8 @@ public class Flight extends StatefulModule {
   @Handler
   public void onScreenDraw(TickEvent event) {
     if (event.getState() == State.POST) {
-      StarfruitMod.minecraft.player.abilities.flying = true;
-      StarfruitMod.minecraft.player.abilities.setFlySpeed((float) (double) this.speed.get());
+      StarfruitMod.minecraft.player.getAbilities().flying = true;
+      StarfruitMod.minecraft.player.getAbilities().setFlySpeed((float) (double) this.speed.get());
     }
   }
 

@@ -7,7 +7,6 @@ import net.engio.mbassy.listener.Listener;
 import net.engio.mbassy.listener.References;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.mob.MobEntity;
@@ -15,6 +14,7 @@ import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.Vec3f;
 import org.lwjgl.opengl.GL11;
 import software.tachyon.starfruit.StarfruitMod;
 import software.tachyon.starfruit.module.ModuleInfo;
@@ -135,8 +135,8 @@ public class ESP extends StatefulModule {
     final Vec3d interpolatedPos = new Vec3d(interpX, interpY, interpZ);
     final Window window = StarfruitMod.minecraft.getWindow();
     try {
-      final Optional<Vector3f> feetScreenPos = ProjectionUtility.project(interpX, interpY, interpZ, true);
-      final Optional<Vector3f> eyeScreenPos = ProjectionUtility.project(interpX,
+      final Optional<Vec3f> feetScreenPos = ProjectionUtility.project(interpX, interpY, interpZ, true);
+      final Optional<Vec3f> eyeScreenPos = ProjectionUtility.project(interpX,
           interpY + ent.getEyeHeight(ent.getPose()), interpZ, false);
       feetScreenPos.ifPresent(pos -> {
         this.renderSetup();
@@ -160,15 +160,15 @@ public class ESP extends StatefulModule {
           if (ent instanceof PlayerEntity && ((PlayerEntity) ent).isSneaking()) {
             final PlayerEntity entPlayer = (PlayerEntity) ent;
             final Vec3d lookVec = Vec3d.fromPolar(0.0F, (float) entPlayer.bodyYaw);
-            final Vector3f shiftedFeedPos = ProjectionUtility
-                .project(interpolatedPos.subtract(lookVec.multiply(0.2)), false).orElseGet(() -> feetScreenPos.get());
+            final Vec3f shiftedFeedPos = ProjectionUtility
+                .project(interpolatedPos.subtract(lookVec.multiply(0.2)), false).orElseGet(feetScreenPos::get);
 
             GL11.glVertex2d(shiftedFeedPos.getX(), shiftedFeedPos.getY());
 
             // compute ass position
-            final Vector3f assPos = ProjectionUtility
+            final Vec3f assPos = ProjectionUtility
                 .project(interpolatedPos.add(0.0, 2.5 / 5, 0.0).subtract(lookVec.multiply(0.35)), true).get();
-            final Optional<Vector3f> sneakingEyePos = ProjectionUtility.project(
+            final Optional<Vec3f> sneakingEyePos = ProjectionUtility.project(
                 interpolatedPos.add(0.0, ent.getEyeHeight(ent.getPose()), 0.0).add(lookVec.multiply(0.20)), false);
 
             GL11.glVertex2d(assPos.getX(), assPos.getY());

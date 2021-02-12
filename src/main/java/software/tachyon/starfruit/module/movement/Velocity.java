@@ -28,7 +28,7 @@ public class Velocity extends StatefulModule {
     if (event.getPacket() instanceof EntityVelocityUpdateS2CPacket) {
       final EntityVelocityUpdateS2CPacketMixin packet =
           (EntityVelocityUpdateS2CPacketMixin) event.getPacket();
-      if (packet.getId() == StarfruitMod.minecraft.player.getEntityId()) {
+      if (packet.getId() == StarfruitMod.minecraft.player.getId()) {
         packet.setVelocityX((int) Math.floor(packet.getVelocityX() * this.modifier.get()));
         packet.setVelocityY((int) Math.floor(packet.getVelocityY() * this.modifier.get()));
         packet.setVelocityZ((int) Math.floor(packet.getVelocityZ() * this.modifier.get()));

@@ -25,7 +25,7 @@ public class Camera extends StatefulModule {
   public void onTick(TickEvent event) {
     if (event.getState() == State.POST) {
       StarfruitMod.minecraft.player.flyingSpeed = (float) (double) this.speed.get();
-      StarfruitMod.minecraft.player.abilities.flying = true;
+      StarfruitMod.minecraft.player.getAbilities().flying = true;
       StarfruitMod.minecraft.player.noClip = true;
     }
   }
@@ -39,13 +39,13 @@ public class Camera extends StatefulModule {
 
   @Override
   public void onDisable() {
-    StarfruitMod.minecraft.player.abilities.flying = this.wasFlyingBefore;
+    StarfruitMod.minecraft.player.getAbilities().flying = this.wasFlyingBefore;
     super.onDisable();
   }
 
   @Override
   public void onEnable() {
     super.onEnable();
-    this.wasFlyingBefore = StarfruitMod.minecraft.player.abilities.flying;
+    this.wasFlyingBefore = StarfruitMod.minecraft.player.getAbilities().flying;
   }
 }
