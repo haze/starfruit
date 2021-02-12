@@ -2,7 +2,6 @@ package software.tachyon.starfruit.utility;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
-
 import org.lwjgl.glfw.GLFW;
 
 public class GLFWKeyMapping {

@@ -1,10 +1,9 @@
 package software.tachyon.starfruit.utility;
 
-import java.util.Optional;
-
 import software.tachyon.starfruit.StarfruitMod;
 
-import java.awt.Color;
+import java.awt.*;
+import java.util.Optional;
 
 public class HexShift {
     public static final char CATALYST_CHAR = '\u0666';

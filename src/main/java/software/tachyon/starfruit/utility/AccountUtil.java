@@ -1,13 +1,12 @@
 package software.tachyon.starfruit.utility;
 
-import com.mojang.authlib.UserAuthentication;
-import net.minecraft.client.util.Session;
-import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
-import com.mojang.authlib.yggdrasil.YggdrasilUserAuthentication;
-import com.mojang.authlib.GameProfile;
-import com.mojang.util.UUIDTypeAdapter;
-import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.Agent;
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.UserAuthentication;
+import com.mojang.authlib.exceptions.AuthenticationException;
+import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
+import com.mojang.util.UUIDTypeAdapter;
+import net.minecraft.client.util.Session;
 import org.apache.commons.lang3.StringUtils;
 
 import java.net.Proxy;

@@ -7,25 +7,26 @@ import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
-import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket;
-import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket;
-import net.minecraft.network.packet.c2s.play.ConfirmScreenActionC2SPacket;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.listener.PacketListener;
-import static net.minecraft.item.Items.*;
+import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket;
+import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket;
+import net.minecraft.network.packet.c2s.play.ConfirmScreenActionC2SPacket;
+import net.minecraft.screen.slot.SlotActionType;
+import software.tachyon.starfruit.StarfruitMod;
+import software.tachyon.starfruit.module.ModuleInfo;
+import software.tachyon.starfruit.module.ModuleInfo.Category;
+import software.tachyon.starfruit.module.StatefulModule;
+import software.tachyon.starfruit.module.event.RecvPacketEvent;
+import software.tachyon.starfruit.module.event.SendPacketEvent;
+import software.tachyon.starfruit.module.event.player.InventoryUpdateEvent;
+
 import java.util.LinkedList;
 import java.util.Optional;
 import java.util.Queue;
 
-import net.minecraft.screen.slot.SlotActionType;
-import software.tachyon.starfruit.StarfruitMod;
-import software.tachyon.starfruit.module.ModuleInfo;
-import software.tachyon.starfruit.module.StatefulModule;
-import software.tachyon.starfruit.module.ModuleInfo.Category;
-import software.tachyon.starfruit.module.event.RecvPacketEvent;
-import software.tachyon.starfruit.module.event.SendPacketEvent;
-import software.tachyon.starfruit.module.event.player.InventoryUpdateEvent;
+import static net.minecraft.item.Items.*;
 
 // TODO(haze): Fix bug where accessing items from other containers other than the player inventory
 // results in ghost items

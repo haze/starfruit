@@ -2,7 +2,6 @@
 package software.tachyon.starfruit.utility;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.BufferRenderer;
@@ -10,8 +9,8 @@ import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.AffineTransformation;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.Matrix4f;
 import net.minecraft.text.OrderedText;
+import net.minecraft.util.math.Matrix4f;
 
 public class DrawUtility {
     public static void drawCenteredString(MatrixStack matrices, TextRenderer textRenderer, String str, double centerX, double y, int color) {

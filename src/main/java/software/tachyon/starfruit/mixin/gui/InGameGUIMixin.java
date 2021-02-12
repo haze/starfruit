@@ -6,30 +6,22 @@ import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.hud.BossBarHud;
 import net.minecraft.client.gui.hud.ClientBossBar;
 import net.minecraft.client.gui.hud.InGameHud;
-import net.minecraft.client.sound.SoundEntry;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.boss.BossBar;
-import software.tachyon.starfruit.StarfruitMod;
-import software.tachyon.starfruit.module.ModuleInfo;
-import software.tachyon.starfruit.module.StatefulModule;
-import software.tachyon.starfruit.module.event.api.Event;
-import software.tachyon.starfruit.module.event.gui.InGameHudDrawEvent;
-
-import java.util.Iterator;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import software.tachyon.starfruit.StarfruitMod;
+import software.tachyon.starfruit.module.ModuleInfo;
+import software.tachyon.starfruit.module.StatefulModule;
+import software.tachyon.starfruit.module.event.api.Event;
+import software.tachyon.starfruit.module.event.gui.InGameHudDrawEvent;
 import software.tachyon.starfruit.utility.DrawUtility;
 
-import java.awt.Color;
+import java.awt.*;
+import java.util.*;
 
 @Mixin(InGameHud.class)
 public abstract class InGameGUIMixin extends DrawableHelper {
@@ -38,6 +30,7 @@ public abstract class InGameGUIMixin extends DrawableHelper {
   private final double START_X = 2.5;
   private final double START_Y = 2.5;
 
+  @Final
   @Shadow
   private MinecraftClient client;
 

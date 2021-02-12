@@ -1,7 +1,7 @@
 package software.tachyon.starfruit.mixin.world;
 
-import org.spongepowered.asm.mixin.Mixin;
 import net.minecraft.client.render.WorldRenderer;
+import org.spongepowered.asm.mixin.Mixin;
 
 
 @Mixin(WorldRenderer.class)

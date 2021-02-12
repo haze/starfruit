@@ -2,15 +2,14 @@ package software.tachyon.starfruit.module.movement;
 
 import net.engio.mbassy.listener.Handler;
 import net.engio.mbassy.listener.Listener;
+import net.engio.mbassy.listener.References;
 import software.tachyon.starfruit.StarfruitMod;
 import software.tachyon.starfruit.module.ModuleInfo;
-import software.tachyon.starfruit.module.StatefulModule;
 import software.tachyon.starfruit.module.ModuleInfo.Category;
+import software.tachyon.starfruit.module.StatefulModule;
 import software.tachyon.starfruit.module.event.TickEvent;
 import software.tachyon.starfruit.module.event.TickEvent.State;
-import software.tachyon.starfruit.module.event.gui.InGameHudDrawEvent;
 import software.tachyon.starfruit.module.variable.Variable;
-import net.engio.mbassy.listener.References;
 
 @Listener(references = References.Strong)
 public class Flight extends StatefulModule {

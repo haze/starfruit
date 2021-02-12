@@ -1,20 +1,13 @@
 package software.tachyon.starfruit.module.network;
 
-import net.engio.mbassy.listener.Handler;
-import net.minecraft.network.Packet;
-import net.minecraft.network.listener.PacketListener;
-import net.minecraft.network.packet.c2s.play.*;
-import net.minecraft.network.packet.s2c.play.CommandSuggestionsS2CPacket;
-import software.tachyon.starfruit.StarfruitMod;
-import software.tachyon.starfruit.mixin.network.PlayerMoveC2SPacketMixin;
-import software.tachyon.starfruit.module.ModuleInfo;
-import software.tachyon.starfruit.module.StatefulModule;
-import software.tachyon.starfruit.module.ModuleInfo.Category;
-
 import net.engio.mbassy.listener.Listener;
 import net.engio.mbassy.listener.References;
-import software.tachyon.starfruit.module.event.RecvPacketEvent;
-import software.tachyon.starfruit.module.event.SendPacketEvent;
+import net.minecraft.network.Packet;
+import net.minecraft.network.packet.c2s.play.RequestCommandCompletionsC2SPacket;
+import software.tachyon.starfruit.StarfruitMod;
+import software.tachyon.starfruit.module.ModuleInfo;
+import software.tachyon.starfruit.module.ModuleInfo.Category;
+import software.tachyon.starfruit.module.StatefulModule;
 
 import java.nio.charset.StandardCharsets;
 

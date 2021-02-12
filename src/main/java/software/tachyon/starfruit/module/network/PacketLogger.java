@@ -1,5 +1,14 @@
 package software.tachyon.starfruit.module.network;
 
+import net.engio.mbassy.listener.Handler;
+import net.minecraft.network.Packet;
+import net.minecraft.network.listener.PacketListener;
+import software.tachyon.starfruit.StarfruitMod;
+import software.tachyon.starfruit.module.ModuleInfo;
+import software.tachyon.starfruit.module.StatefulModule;
+import software.tachyon.starfruit.module.event.RecvPacketEvent;
+import software.tachyon.starfruit.module.event.SendPacketEvent;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -9,14 +18,6 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.StringJoiner;
-import net.engio.mbassy.listener.Handler;
-import net.minecraft.network.Packet;
-import net.minecraft.network.listener.PacketListener;
-import software.tachyon.starfruit.StarfruitMod;
-import software.tachyon.starfruit.module.ModuleInfo;
-import software.tachyon.starfruit.module.StatefulModule;
-import software.tachyon.starfruit.module.event.RecvPacketEvent;
-import software.tachyon.starfruit.module.event.SendPacketEvent;
 
 public class PacketLogger extends StatefulModule {
     class LoggedPacket {

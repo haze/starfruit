@@ -1,28 +1,11 @@
 package software.tachyon.starfruit.mixin.gui;
 
-import net.minecraft.client.font.EmptyGlyphRenderer;
-import net.minecraft.client.font.FontStorage;
-import net.minecraft.client.font.Glyph;
 import net.minecraft.client.font.GlyphRenderer;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.util.math.Matrix4f;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.MathHelper;
-import software.tachyon.starfruit.StarfruitMod;
-import software.tachyon.starfruit.utility.HexShift;
-
-import java.awt.Color;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
-
-import com.google.common.collect.Lists;
-
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(TextRenderer.class)

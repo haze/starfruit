@@ -1,5 +1,7 @@
 package software.tachyon.starfruit.module;
 
+import me.xdrop.fuzzywuzzy.FuzzySearch;
+import me.xdrop.fuzzywuzzy.model.ExtractedResult;
 import net.engio.mbassy.bus.MBassador;
 import net.engio.mbassy.listener.Handler;
 import net.engio.mbassy.listener.Listener;
@@ -12,62 +14,43 @@ import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.network.listener.ServerPlayPacketListener;
 import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
-import software.tachyon.starfruit.module.event.api.Event;
-import software.tachyon.starfruit.module.event.gui.InGameHudDrawEvent;
+import software.tachyon.starfruit.StarfruitMod;
+import software.tachyon.starfruit.command.Parser;
+import software.tachyon.starfruit.mixin.gui.ChatScreenInterfaceMixin;
 import software.tachyon.starfruit.module.event.GameJoinEvent;
 import software.tachyon.starfruit.module.event.KeyPressEvent;
 import software.tachyon.starfruit.module.event.SendPacketEvent;
+import software.tachyon.starfruit.module.event.api.Event;
+import software.tachyon.starfruit.module.event.gui.InGameHudDrawEvent;
 import software.tachyon.starfruit.module.movement.Flight;
 import software.tachyon.starfruit.module.movement.NoFall;
 import software.tachyon.starfruit.module.movement.Sprint;
 import software.tachyon.starfruit.module.movement.Velocity;
 import software.tachyon.starfruit.module.network.Crash;
 import software.tachyon.starfruit.module.network.PacketLogger;
+import software.tachyon.starfruit.module.render.Camera;
+import software.tachyon.starfruit.module.render.ESP;
 import software.tachyon.starfruit.module.render.Luminance;
 import software.tachyon.starfruit.module.utility.AutoArmor;
 import software.tachyon.starfruit.module.utility.FastPlace;
-import software.tachyon.starfruit.module.render.Camera;
-import software.tachyon.starfruit.module.render.ESP;
 import software.tachyon.starfruit.module.variable.Variable;
 import software.tachyon.starfruit.utility.DrawUtility;
 import software.tachyon.starfruit.utility.GLFWKeyMapping;
 import software.tachyon.starfruit.utility.HexShift;
-import software.tachyon.starfruit.StarfruitMod;
-import software.tachyon.starfruit.command.Parser;
-import software.tachyon.starfruit.mixin.gui.ChatScreenInterfaceMixin;
 
-import static org.lwjgl.glfw.GLFW.*;
-
-import java.awt.Color;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.awt.*;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
 import java.util.Queue;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.StringTokenizer;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import me.xdrop.fuzzywuzzy.FuzzySearch;
-import me.xdrop.fuzzywuzzy.model.ExtractedResult;
-
-import java.util.Map;
+import static org.lwjgl.glfw.GLFW.*;
 
 // TODO(haze): Redesign 'setBind' to be more ergonomic (if need be)
 // TODO(haze): KillAura, BlockESP, FastPlace, AutoRespawn, Speedmine, AutoArmor,

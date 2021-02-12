@@ -1,16 +1,11 @@
 package software.tachyon.starfruit.command;
 
-import java.lang.reflect.Field;
-import java.util.Arrays;
+import software.tachyon.starfruit.module.ModuleManager;
+import software.tachyon.starfruit.module.variable.Variable;
+
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Scanner;
-import java.util.StringJoiner;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import software.tachyon.starfruit.module.ModuleManager;
-import software.tachyon.starfruit.module.variable.Variable;
 
 public class Parser {
 

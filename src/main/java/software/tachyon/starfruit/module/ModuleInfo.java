@@ -1,8 +1,8 @@
 package software.tachyon.starfruit.module;
 
-import java.awt.Color;
-
 import software.tachyon.starfruit.StarfruitMod;
+
+import java.awt.*;
 
 public class ModuleInfo {
 

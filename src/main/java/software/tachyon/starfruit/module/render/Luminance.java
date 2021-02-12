@@ -1,18 +1,17 @@
 package software.tachyon.starfruit.module.render;
 
+import net.engio.mbassy.listener.Listener;
+import net.engio.mbassy.listener.References;
+import net.minecraft.util.math.MathHelper;
 import software.tachyon.starfruit.StarfruitMod;
 import software.tachyon.starfruit.mixin.world.DimensionMixin;
 import software.tachyon.starfruit.module.ModuleInfo;
-import software.tachyon.starfruit.module.StatefulModule;
 import software.tachyon.starfruit.module.ModuleInfo.Category;
+import software.tachyon.starfruit.module.StatefulModule;
 import software.tachyon.starfruit.module.variable.Variable;
 
 import java.util.Optional;
 import java.util.concurrent.Future;
-
-import net.engio.mbassy.listener.Listener;
-import net.engio.mbassy.listener.References;
-import net.minecraft.util.math.MathHelper;
 
 @Listener(references = References.Strong)
 public class Luminance extends StatefulModule {

@@ -14,7 +14,8 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.Optional;
 
-import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL11.GL_PROJECTION_MATRIX;
+import static org.lwjgl.opengl.GL11.glGetFloatv;
 // import static org.lwjgl.util.glu.Project.gluProject;
 
 public final class ProjectionUtility {

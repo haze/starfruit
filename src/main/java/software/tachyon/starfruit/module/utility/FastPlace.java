@@ -4,8 +4,8 @@ import net.engio.mbassy.listener.Handler;
 import software.tachyon.starfruit.StarfruitMod;
 import software.tachyon.starfruit.mixin.client.MinecraftClientInterfaceMixin;
 import software.tachyon.starfruit.module.ModuleInfo;
-import software.tachyon.starfruit.module.StatefulModule;
 import software.tachyon.starfruit.module.ModuleInfo.Category;
+import software.tachyon.starfruit.module.StatefulModule;
 import software.tachyon.starfruit.module.event.TickEvent;
 import software.tachyon.starfruit.module.event.TickEvent.State;
 

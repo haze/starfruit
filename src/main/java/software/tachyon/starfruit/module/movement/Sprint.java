@@ -1,14 +1,13 @@
 package software.tachyon.starfruit.module.movement;
 
-import software.tachyon.starfruit.StarfruitMod;
-import software.tachyon.starfruit.module.ModuleInfo;
-import software.tachyon.starfruit.module.StatefulModule;
-import software.tachyon.starfruit.module.ModuleInfo.Category;
-import software.tachyon.starfruit.module.event.SprintChangeEvent;
-
 import net.engio.mbassy.listener.Handler;
 import net.engio.mbassy.listener.Listener;
 import net.engio.mbassy.listener.References;
+import software.tachyon.starfruit.StarfruitMod;
+import software.tachyon.starfruit.module.ModuleInfo;
+import software.tachyon.starfruit.module.ModuleInfo.Category;
+import software.tachyon.starfruit.module.StatefulModule;
+import software.tachyon.starfruit.module.event.SprintChangeEvent;
 
 @Listener(references = References.Strong)
 public class Sprint extends StatefulModule {

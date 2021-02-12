@@ -1,12 +1,11 @@
 package software.tachyon.starfruit.mixin.entity;
 
+import net.engio.mbassy.bus.MBassador;
+import net.minecraft.entity.LivingEntity;
+import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.Mixin;
-
-import net.engio.mbassy.bus.MBassador;
-import net.minecraft.entity.LivingEntity;
 import software.tachyon.starfruit.StarfruitMod;
 import software.tachyon.starfruit.module.event.SprintChangeEvent;
 import software.tachyon.starfruit.module.event.api.Event;

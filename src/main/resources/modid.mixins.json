@@ -1,7 +1,7 @@
 {
   "required": true,
   "package": "software.tachyon.starfruit.mixin",
-  "compatibilityLevel": "JAVA_8",
+  "compatibilityLevel": "JAVA_14",
   "mixins": [],
   "client": [
     "client.MinecraftClientMixin",

@@ -1,29 +1,23 @@
 package software.tachyon.starfruit;
 
-import java.nio.file.*;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Scanner;
-import java.util.UUID;
-
-import net.minecraft.util.Util;
-import org.apache.commons.lang3.StringUtils;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.awt.Color;
-
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.network.MessageType;
 import net.minecraft.text.LiteralText;
+import net.minecraft.util.Util;
+import org.apache.commons.lang3.StringUtils;
 import software.tachyon.starfruit.mixin.client.MinecraftClientInterfaceMixin;
 import software.tachyon.starfruit.module.ModuleManager;
 import software.tachyon.starfruit.utility.AccountUtil;
 import software.tachyon.starfruit.utility.HexShift;
+
+import java.awt.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.*;
 
 public class StarfruitMod implements ModInitializer {
 

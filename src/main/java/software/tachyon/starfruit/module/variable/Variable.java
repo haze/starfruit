@@ -1,13 +1,12 @@
 package software.tachyon.starfruit.module.variable;
 
+import com.google.common.collect.Streams;
+import software.tachyon.starfruit.StarfruitMod;
+
 import java.util.Arrays;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.regex.Pattern;
-
-import com.google.common.collect.Streams;
-
-import software.tachyon.starfruit.StarfruitMod;
+import java.util.stream.Collectors;
 
 public abstract class Variable<T> {
     private final T initial;

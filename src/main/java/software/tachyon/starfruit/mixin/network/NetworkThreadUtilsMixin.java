@@ -1,15 +1,15 @@
 package software.tachyon.starfruit.mixin.network;
 
-import net.minecraft.network.packet.s2c.play.ScreenHandlerSlotUpdateS2CPacket;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-
 import net.engio.mbassy.bus.MBassador;
 import net.minecraft.network.NetworkThreadUtils;
 import net.minecraft.network.Packet;
 import net.minecraft.network.listener.PacketListener;
+import net.minecraft.network.packet.s2c.play.ScreenHandlerSlotUpdateS2CPacket;
+import org.spongepowered.asm.mixin.Dynamic;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import software.tachyon.starfruit.StarfruitMod;
 import software.tachyon.starfruit.module.event.RecvPacketEvent;
 import software.tachyon.starfruit.module.event.api.Event;
@@ -17,6 +17,7 @@ import software.tachyon.starfruit.module.event.player.InventoryUpdateEvent;
 
 @Mixin(NetworkThreadUtils.class)
 public class NetworkThreadUtilsMixin {
+    @Dynamic("Runnable lambda in forceMainThread")
     @Inject(method = "method_11072", cancellable = true, at = @At(value = "INVOKE",
             target = "Lnet/minecraft/network/Packet;apply(Lnet/minecraft/network/listener/PacketListener;)V"))
     private static <T extends PacketListener> void redirectHandlePacketPre(PacketListener handler,
@@ -31,6 +32,7 @@ public class NetworkThreadUtilsMixin {
         }
     }
 
+    @Dynamic("Runnable lambda in forceMainThread")
     @Inject(method = "method_11072", cancellable = true, at = @At(value = "RETURN"))
     private static <T extends PacketListener> void redirectHandlePacketPost(PacketListener handler,
                                                                             Packet<T> packet, CallbackInfo ci) {

@@ -1,18 +1,12 @@
 package software.tachyon.starfruit.module.render;
 
-import java.awt.Color;
-import java.util.Optional;
-
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-
-import net.minecraft.client.util.math.MatrixStack;
-import org.lwjgl.opengl.GL11;
-
 import net.engio.mbassy.listener.Handler;
 import net.engio.mbassy.listener.Listener;
 import net.engio.mbassy.listener.References;
 import net.minecraft.client.util.Window;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
@@ -21,15 +15,19 @@ import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import org.lwjgl.opengl.GL11;
 import software.tachyon.starfruit.StarfruitMod;
 import software.tachyon.starfruit.module.ModuleInfo;
-import software.tachyon.starfruit.module.StatefulModule;
 import software.tachyon.starfruit.module.ModuleInfo.Category;
+import software.tachyon.starfruit.module.StatefulModule;
 import software.tachyon.starfruit.module.event.gui.InGameHudDrawEvent;
 import software.tachyon.starfruit.module.event.gui.NametagRenderEvent;
 import software.tachyon.starfruit.module.variable.Variable;
 import software.tachyon.starfruit.utility.DrawUtility;
 import software.tachyon.starfruit.utility.ProjectionUtility;
+
+import java.awt.*;
+import java.util.Optional;
 
 @Listener(references = References.Strong)
 public class ESP extends StatefulModule {
