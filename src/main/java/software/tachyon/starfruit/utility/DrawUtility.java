@@ -4,9 +4,9 @@ package software.tachyon.starfruit.utility;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.*;
-import net.minecraft.client.util.math.AffineTransformation;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.OrderedText;
+import net.minecraft.util.math.AffineTransformation;
 import net.minecraft.util.math.Matrix4f;
 
 public class DrawUtility {
