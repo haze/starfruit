@@ -79,11 +79,14 @@ public class ESP extends StatefulModule {
   }
 
   void renderSetup() {
-    RenderSystem.pushMatrix();
+    RenderSystem.getModelViewStack().push();
+    RenderSystem.applyModelViewMatrix();
+
     RenderSystem.lineWidth((float) (double) this.tracerWidth.get());
 
     RenderSystem.disableDepthTest();
-    RenderSystem.disableLighting();
+    // FIXME(jordin): find an alternative
+    // RenderSystem.disableLighting();
     RenderSystem.disableTexture();
     RenderSystem.enableBlend();
     RenderSystem.blendFuncSeparate(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA,
@@ -93,7 +96,9 @@ public class ESP extends StatefulModule {
   void renderTeardown() {
     GL11.glDisable(GL11.GL_LINE_SMOOTH);
     RenderSystem.disableBlend();
-    RenderSystem.popMatrix();
+
+    RenderSystem.getModelViewStack().pop();
+    RenderSystem.applyModelViewMatrix();
   }
 
   Color colorize(Entity ent) {
@@ -150,7 +155,7 @@ public class ESP extends StatefulModule {
         } else {
           col = colorize(ent);
         }
-        RenderSystem.color3f(col.getRed() / 255F, col.getGreen() / 255F, col.getBlue() / 255F);
+        GL11.glColor3f(col.getRed() / 255F, col.getGreen() / 255F, col.getBlue() / 255F);
 
         GL11.glBegin(GL11.GL_LINE_STRIP);
         // center of screen

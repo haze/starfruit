@@ -37,13 +37,17 @@ public final class ProjectionUtility {
     // private static final IntBuffer VIEWPORT =
     // GlAllocationUtils.allocateByteBuffer(16 << 2).asIntBuffer();
     private static final IntBuffer VIEWPORT = GlAllocationUtils.allocateByteBuffer(32).asIntBuffer();
-    private static final FloatBuffer MODELVIEW = GlAllocationUtils.allocateFloatBuffer(16);
-    private static final FloatBuffer PROJECTION = GlAllocationUtils.allocateFloatBuffer(16);
+    private static final FloatBuffer MODELVIEW = allocateFloatBuffer(16);
+    private static final FloatBuffer PROJECTION = allocateFloatBuffer(16);
 
-    private static final FloatBuffer SCREEN_COORDS = GlAllocationUtils.allocateFloatBuffer(3);
+    private static final FloatBuffer SCREEN_COORDS = allocateFloatBuffer(3);
 
     private static int scaledWidth, scaledHeight;
     private static double cameraX, cameraY, cameraZ;
+
+    private static FloatBuffer allocateFloatBuffer(int size) {
+        return GlAllocationUtils.allocateByteBuffer(size << 2).asFloatBuffer();
+    }
 
     public static void updateViewport(MatrixStack matrixStack, Window window) {
         scaledWidth = window.getScaledWidth();

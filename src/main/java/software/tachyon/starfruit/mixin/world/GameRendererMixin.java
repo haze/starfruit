@@ -3,6 +3,7 @@ package software.tachyon.starfruit.mixin.world;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
+import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -20,8 +21,12 @@ public abstract class GameRendererMixin {
 
     @Inject(method = "renderWorld(FJLnet/minecraft/client/util/math/MatrixStack;)V", at = @At(value = "INVOKE_STRING", target = "Lnet/minecraft/util/profiler/Profiler;swap(Ljava/lang/String;)V", args = "ldc=hand", shift = At.Shift.BEFORE))
     private void renderWorld(float f, long j, MatrixStack stack, CallbackInfo ci) {
-        RenderSystem.pushMatrix();
+        RenderSystem.getModelViewStack().push();
+        RenderSystem.applyModelViewMatrix();
+
         ProjectionUtility.updateViewport(stack, StarfruitMod.minecraft.getWindow());
-        RenderSystem.popMatrix();
+
+        RenderSystem.getModelViewStack().pop();
+        RenderSystem.applyModelViewMatrix();
     }
 }

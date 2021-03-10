@@ -12,7 +12,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.network.listener.PacketListener;
 import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket;
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket;
-import net.minecraft.network.packet.c2s.play.ConfirmScreenActionC2SPacket;
 import net.minecraft.screen.slot.SlotActionType;
 import software.tachyon.starfruit.StarfruitMod;
 import software.tachyon.starfruit.module.ModuleInfo;
@@ -203,7 +202,7 @@ public class AutoArmor extends StatefulModule {
     System.out.println("AutoArmor.equip()");
     final ClientPlayerEntity player = StarfruitMod.minecraft.player;
     final ClientPlayNetworkHandler netHandler = StarfruitMod.minecraft.getNetworkHandler();
-    short s = player.currentScreenHandler.getNextActionId(player.getInventory());
+    // short s = player.currentScreenHandler.getNextActionId(player.getInventory());
     if (!isInAcceptableInventory()) {
       // move item to player inv
       this.quickMoveSlot(from);
@@ -216,7 +215,8 @@ public class AutoArmor extends StatefulModule {
         equipSwap(from, to);
       }
     }
-    netHandler.sendPacket(new ConfirmScreenActionC2SPacket(0, s, true));
+    // FIXME(haze): what do you think you are doing here?
+    // netHandler.sendPacket(new ConfirmScreenActionC2SPacket(0, s, true));
   }
 
   final int ARMOR_HELMET_SLOT = 3;
@@ -249,7 +249,7 @@ public class AutoArmor extends StatefulModule {
       System.out.printf("button: %d\n", packet.getClickData());
       System.out.printf("slot: %d\n", packet.getSlot());
       System.out.printf("actionType: %s\n", packet.getActionType().toString());
-      System.out.printf("transID: %d\n", packet.getActionId());
+      System.out.printf("transIDs: %d\n", packet.method_34678());
       System.out.println();
     }
   }

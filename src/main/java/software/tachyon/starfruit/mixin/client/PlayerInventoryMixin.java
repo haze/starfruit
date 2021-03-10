@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(PlayerInventory.class)
 public class PlayerInventoryMixin {
-    @Inject(method = "setCursorStack", at = @At("HEAD"))
-    public void setCursorStack(ItemStack newStack, CallbackInfo ci) {
-    }
+//    @Inject(method = "setCursorStack", at = @At("HEAD"))
+//    public void setCursorStack(ItemStack newStack, CallbackInfo ci) {
+//    }
 }

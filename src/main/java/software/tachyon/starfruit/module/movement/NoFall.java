@@ -27,7 +27,7 @@ public class NoFall extends StatefulModule {
   @Handler
   <T extends PacketListener> void onPacketSend(SendPacketEvent<T> event) {
     if (event.getPacket() instanceof PlayerMoveC2SPacket) {
-      ((PlayerMoveC2SPacketMixin) event.getPacket()).setField_29179(true);
+      ((PlayerMoveC2SPacketMixin) event.getPacket()).setOnGround(true);
     } else if (event.getPacket() instanceof ClientCommandC2SPacket) {
       final ClientCommandC2SPacket packet = (ClientCommandC2SPacket) event.getPacket();
       if (packet.getMode() == Mode.PRESS_SHIFT_KEY) {
